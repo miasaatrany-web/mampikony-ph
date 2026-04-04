@@ -3,27 +3,42 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../components/AuthProvider';
 import { api } from '../api';
 import { Product, Sale } from '../types';
-import { Package, ShoppingCart, AlertTriangle, TrendingUp, Clock, CheckCircle2, XCircle, ArrowRight, Plus, LogOut, PlusCircle } from 'lucide-react';
+import { Package, ShoppingCart, AlertTriangle, TrendingUp, Clock, CheckCircle2, XCircle, ArrowRight, Plus, LogOut, PlusCircle, Users, ShieldAlert } from 'lucide-react';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { cn } from '../lib/utils';
 
 const Dashboard: React.FC = () => {
-  const { user, isAgent, logout } = useAuth();
+  const { user, isAdmin, isAgent, logout } = useAuth();
   const navigate = useNavigate();
   const [products, setProducts] = useState<Product[]>([]);
   const [recentSales, setRecentSales] = useState<Sale[]>([]);
+  const [pendingUsersCount, setPendingUsersCount] = useState(0);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [productsData, salesData] = await Promise.all([
+        const promises: Promise<any>[] = [
           api.products.list(),
           api.sales.list()
-        ]);
+        ];
+
+        if (isAdmin) {
+          promises.push(api.auth.list());
+        }
+
+        const results = await Promise.all(promises);
+        const productsData = results[0];
+        const salesData = results[1];
+        
         setProducts(productsData);
-        setRecentSales(salesData.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()).slice(0, 5));
+        setRecentSales(salesData.sort((a: Sale, b: Sale) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()).slice(0, 5));
+        
+        if (isAdmin && results[2]) {
+          const pending = results[2].filter((u: any) => !u.approved).length;
+          setPendingUsersCount(pending);
+        }
       } catch (err) {
         console.error(err);
       } finally {
@@ -31,7 +46,7 @@ const Dashboard: React.FC = () => {
       }
     };
     fetchData();
-  }, []);
+  }, [isAdmin]);
 
   const lowStockProducts = products.filter(p => p.quantity <= (p.lowStockThreshold || 5));
   const expiredProducts = products.filter(p => new Date(p.expirationDate) < new Date());
@@ -108,6 +123,28 @@ const Dashboard: React.FC = () => {
           </button>
         </div>
       </header>
+
+      {/* Pending Approvals Alert */}
+      {isAdmin && pendingUsersCount > 0 && (
+        <div className="bg-amber-50 border-2 border-amber-200 p-6 rounded-[2rem] flex flex-col md:flex-row items-center justify-between gap-6 shadow-xl shadow-amber-500/5 animate-in slide-in-from-top-4 duration-500">
+          <div className="flex items-center gap-5">
+            <div className="w-14 h-14 bg-amber-500 text-white rounded-2xl flex items-center justify-center shadow-lg shadow-amber-500/20">
+              <ShieldAlert size={28} />
+            </div>
+            <div>
+              <h3 className="text-xl font-black text-slate-900 leading-tight">Demandes d'inscription en attente</h3>
+              <p className="text-amber-700 font-medium">Il y a <span className="font-black underline">{pendingUsersCount} agent(s)</span> qui attendent votre approbation pour accéder au système.</p>
+            </div>
+          </div>
+          <Link 
+            to="/agents" 
+            className="bg-slate-900 text-white px-8 py-4 rounded-2xl font-black text-sm uppercase tracking-widest hover:bg-slate-800 transition-all shadow-lg active:scale-95 flex items-center gap-2"
+          >
+            <Users size={18} />
+            Gérer les demandes
+          </Link>
+        </div>
+      )}
 
       {/* Stats Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">

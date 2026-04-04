@@ -52,11 +52,19 @@ async function startServer() {
       password: hashedPassword,
       displayName,
       role,
+      approved: role === 'admin', // Admins are auto-approved, agents need approval
       createdAt: new Date().toISOString()
     };
 
     db.users.push(newUser);
     saveDb(db);
+
+    if (!newUser.approved) {
+      return res.json({ 
+        message: 'Compte créé avec succès ! Votre compte est en attente d\'approbation par un administrateur.',
+        pendingApproval: true 
+      });
+    }
 
     const token = jwt.sign({ id: newUser.id, role: newUser.role }, JWT_SECRET);
     const { password: _, ...userWithoutPassword } = newUser;
@@ -70,6 +78,10 @@ async function startServer() {
 
     if (!user || !(await bcrypt.compare(password, user.password))) {
       return res.status(400).json({ message: 'Email ou mot de passe incorrect.' });
+    }
+
+    if (!user.approved) {
+      return res.status(403).json({ message: 'Votre compte est en attente d\'approbation par un administrateur.' });
     }
 
     const token = jwt.sign({ id: user.id, role: user.role }, JWT_SECRET);
@@ -89,6 +101,75 @@ async function startServer() {
 
       const { password: _, ...userWithoutPassword } = user;
       res.json(userWithoutPassword);
+    } catch (err) {
+      res.status(401).json({ message: 'Token invalide' });
+    }
+  });
+
+  // --- User Routes ---
+  app.get('/api/users', (req, res) => {
+    const token = req.headers.authorization?.split(' ')[1];
+    if (!token) return res.status(401).json({ message: 'Non autorisé' });
+
+    try {
+      const decoded: any = jwt.verify(token, JWT_SECRET);
+      if (decoded.role !== 'admin') {
+        return res.status(403).json({ message: 'Accès réservé aux administrateurs' });
+      }
+
+      const db = getDb();
+      const usersWithoutPasswords = db.users.map((u: any) => {
+        const { password, ...userWithoutPassword } = u;
+        // Add some stats for each user
+        const userSales = db.sales.filter((s: any) => s.agentId === u.id);
+        return {
+          ...userWithoutPassword,
+          salesCount: userSales.length,
+          totalSales: userSales.reduce((acc: number, s: any) => acc + s.total, 0)
+        };
+      });
+      res.json(usersWithoutPasswords);
+    } catch (err) {
+      res.status(401).json({ message: 'Token invalide' });
+    }
+  });
+
+  app.patch('/api/users/:id/approve', (req, res) => {
+    const token = req.headers.authorization?.split(' ')[1];
+    if (!token) return res.status(401).json({ message: 'Non autorisé' });
+
+    try {
+      const decoded: any = jwt.verify(token, JWT_SECRET);
+      if (decoded.role !== 'admin') {
+        return res.status(403).json({ message: 'Accès réservé aux administrateurs' });
+      }
+
+      const db = getDb();
+      const index = db.users.findIndex((u: any) => u.id === req.params.id);
+      if (index === -1) return res.status(404).json({ message: 'Utilisateur non trouvé' });
+
+      db.users[index].approved = true;
+      saveDb(db);
+      res.json({ message: 'Utilisateur approuvé' });
+    } catch (err) {
+      res.status(401).json({ message: 'Token invalide' });
+    }
+  });
+
+  app.delete('/api/users/:id', (req, res) => {
+    const token = req.headers.authorization?.split(' ')[1];
+    if (!token) return res.status(401).json({ message: 'Non autorisé' });
+
+    try {
+      const decoded: any = jwt.verify(token, JWT_SECRET);
+      if (decoded.role !== 'admin') {
+        return res.status(403).json({ message: 'Accès réservé aux administrateurs' });
+      }
+
+      const db = getDb();
+      db.users = db.users.filter((u: any) => u.id !== req.params.id);
+      saveDb(db);
+      res.json({ message: 'Utilisateur supprimé' });
     } catch (err) {
       res.status(401).json({ message: 'Token invalide' });
     }

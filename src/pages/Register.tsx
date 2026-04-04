@@ -10,6 +10,7 @@ const Register: React.FC = () => {
   const [displayName, setDisplayName] = useState('');
   const [role, setRole] = useState<'admin' | 'agent'>('agent');
   const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
   const { register } = useAuth();
@@ -17,11 +18,16 @@ const Register: React.FC = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
+    setSuccess('');
     setLoading(true);
 
     try {
-      await register({ email, password, displayName, role });
-      navigate('/');
+      const res: any = await register({ email, password, displayName, role });
+      if (res.pendingApproval) {
+        setSuccess(res.message);
+      } else {
+        navigate('/');
+      }
     } catch (err: any) {
       console.error('Registration Error:', err);
       setError(err.message || 'Une erreur est survenue lors de l\'inscription.');
@@ -29,6 +35,28 @@ const Register: React.FC = () => {
       setLoading(false);
     }
   };
+
+  if (success) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
+        <div className="max-w-md w-full bg-white rounded-3xl shadow-xl overflow-hidden border border-gray-100 p-10 text-center space-y-6">
+          <div className="w-20 h-20 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto shadow-lg shadow-emerald-600/10">
+            <ShieldCheck size={40} />
+          </div>
+          <h2 className="text-2xl font-black text-slate-900">Inscription réussie !</h2>
+          <p className="text-slate-500 font-medium leading-relaxed">
+            {success}
+          </p>
+          <Link
+            to="/login"
+            className="block w-full bg-brand-600 text-white font-black py-4 rounded-2xl hover:bg-brand-500 transition-all shadow-lg shadow-brand-600/20 uppercase tracking-widest text-xs"
+          >
+            Retour à la connexion
+          </Link>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">

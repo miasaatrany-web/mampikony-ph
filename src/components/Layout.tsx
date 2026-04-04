@@ -1,7 +1,7 @@
 import React from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from './AuthProvider';
-import { LayoutDashboard, Package, ShoppingCart, History, LogOut, User as UserIcon, Menu, X, Plus, PlusCircle } from 'lucide-react';
+import { LayoutDashboard, Package, ShoppingCart, History, LogOut, User as UserIcon, Menu, X, Plus, PlusCircle, Users } from 'lucide-react';
 import { cn } from '../lib/utils';
 
 const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -20,6 +20,7 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     { label: 'Nouvelle Vente', path: '/pos', icon: ShoppingCart, show: isAgent },
     { label: 'Stock / Produits', path: '/stock', icon: Package, show: isAgent },
     { label: 'Historique', path: '/history', icon: History, show: true },
+    { label: 'Agents', path: '/agents', icon: Users, show: isAdmin },
   ];
 
   const activeItem = navItems.find(item => item.path === location.pathname);

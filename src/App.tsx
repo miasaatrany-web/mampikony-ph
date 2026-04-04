@@ -12,6 +12,7 @@ import Dashboard from './pages/Dashboard';
 import Stock from './pages/Stock';
 import POS from './pages/POS';
 import History from './pages/History';
+import Agents from './pages/Agents';
 
 export default function App() {
   return (
@@ -60,6 +61,16 @@ export default function App() {
               <AuthGuard>
                 <Layout>
                   <History />
+                </Layout>
+              </AuthGuard>
+            }
+          />
+          <Route
+            path="/agents"
+            element={
+              <AuthGuard requireAdmin>
+                <Layout>
+                  <Agents />
                 </Layout>
               </AuthGuard>
             }

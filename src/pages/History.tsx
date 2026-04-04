@@ -15,6 +15,7 @@ const History: React.FC = () => {
   const [selectedSale, setSelectedSale] = useState<Sale | null>(null);
   const [loading, setLoading] = useState(true);
   const [transmittingIds, setTransmittingIds] = useState<string[]>([]);
+  const [validatingIds, setValidatingIds] = useState<string[]>([]);
 
   const fetchSales = async () => {
     try {
@@ -37,24 +38,38 @@ const History: React.FC = () => {
   );
 
   const handleValidatePayment = async (id: string) => {
-    try {
-      await api.sales.update(id, { status: 'paid' });
-      fetchSales();
-      if (selectedSale?.id === id) {
-        setSelectedSale({ ...selectedSale, status: 'paid' });
+    if (window.confirm('Voulez-vous confirmer le paiement de cette vente ?')) {
+      setValidatingIds(prev => [...prev, id]);
+      console.log('Validating payment for sale:', id);
+      try {
+        await api.sales.update(id, { status: 'paid' });
+        await fetchSales();
+        if (selectedSale?.id === id) {
+          setSelectedSale(prev => prev ? { ...prev, status: 'paid' } : null);
+        }
+        alert('Vente validée avec succès !');
+      } catch (err) {
+        console.error('Error validating payment:', err);
+        alert('Erreur lors de la validation du paiement.');
+      } finally {
+        setValidatingIds(prev => prev.filter(vid => vid !== id));
       }
-    } catch (err) {
-      console.error(err);
-      alert('Erreur lors de la validation du paiement.');
     }
   };
 
   const handleTransmit = async (id: string) => {
     setTransmittingIds(prev => [...prev, id]);
-    // Simulate transmission
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    setTransmittingIds(prev => prev.filter(tid => tid !== id));
-    alert('Vente transmise à l\'administrateur avec succès !');
+    try {
+      // In a real app, this would notify the admin or change a 'transmitted' flag
+      // For now, we'll update a local status if we had one, but we'll just simulate success
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      alert('Vente transmise à l\'administrateur avec succès !');
+    } catch (err) {
+      console.error(err);
+      alert('Erreur lors de la transmission.');
+    } finally {
+      setTransmittingIds(prev => prev.filter(tid => tid !== id));
+    }
   };
 
   const handleTransmitAll = async () => {
@@ -148,6 +163,7 @@ const History: React.FC = () => {
               <tr>
                 <th className="px-8 py-6 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Facture #</th>
                 <th className="px-8 py-6 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Client</th>
+                {isAdmin && <th className="px-8 py-6 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Agent</th>}
                 <th className="px-8 py-6 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Date</th>
                 <th className="px-8 py-6 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Total</th>
                 <th className="px-8 py-6 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Statut</th>
@@ -157,7 +173,7 @@ const History: React.FC = () => {
             <tbody className="divide-y divide-slate-100">
               {loading ? (
                 <tr>
-                  <td colSpan={6} className="px-8 py-20 text-center">
+                  <td colSpan={isAdmin ? 7 : 6} className="px-8 py-20 text-center">
                     <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-brand-600 mx-auto"></div>
                   </td>
                 </tr>
@@ -175,6 +191,16 @@ const History: React.FC = () => {
                         <span className="font-bold text-slate-700">{sale.customerName || 'Client anonyme'}</span>
                       </div>
                     </td>
+                    {isAdmin && (
+                      <td className="px-8 py-6">
+                        <div className="flex items-center gap-2">
+                          <div className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-[10px] font-bold text-slate-500 uppercase border border-slate-200">
+                            {sale.agentName?.charAt(0) || 'A'}
+                          </div>
+                          <span className="font-bold text-slate-700">{sale.agentName || 'N/A'}</span>
+                        </div>
+                      </td>
+                    )}
                     <td className="px-8 py-6">
                       <div className="flex flex-col">
                         <span className="font-bold text-slate-700 text-sm">{format(new Date(sale.createdAt), 'dd MMMM yyyy', { locale: fr })}</span>
@@ -224,10 +250,20 @@ const History: React.FC = () => {
                         {isAdmin && sale.status === 'pending' && (
                           <button
                             onClick={() => handleValidatePayment(sale.id)}
-                            className="p-2 text-emerald-600 bg-emerald-50 hover:bg-emerald-100 rounded-xl transition-all flex items-center gap-2"
+                            disabled={validatingIds.includes(sale.id)}
+                            className={cn(
+                              "p-2 rounded-xl transition-all flex items-center gap-2",
+                              validatingIds.includes(sale.id)
+                                ? "text-slate-300 animate-pulse"
+                                : "text-emerald-600 bg-emerald-50 hover:bg-emerald-100"
+                            )}
                             title="Valider Paiement"
                           >
-                            <CheckCircle2 size={20} />
+                            {validatingIds.includes(sale.id) ? (
+                              <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-emerald-600"></div>
+                            ) : (
+                              <CheckCircle2 size={20} />
+                            )}
                             <span className="text-[10px] font-bold">Valider</span>
                           </button>
                         )}
@@ -246,7 +282,7 @@ const History: React.FC = () => {
                 ))
               ) : (
                 <tr>
-                  <td colSpan={6} className="px-8 py-20 text-center">
+                  <td colSpan={isAdmin ? 7 : 6} className="px-8 py-20 text-center">
                     <div className="bg-slate-50 w-20 h-20 rounded-[2rem] flex items-center justify-center mx-auto mb-6">
                       <HistoryIcon className="text-slate-300" size={40} />
                     </div>
@@ -375,10 +411,22 @@ const History: React.FC = () => {
                 {isAdmin && selectedSale.status === 'pending' && (
                   <button
                     onClick={() => handleValidatePayment(selectedSale.id)}
-                    className="flex-1 bg-brand-600 text-white font-black py-5 rounded-2xl hover:bg-brand-500 transition-all shadow-xl shadow-brand-600/20 active:scale-95 flex items-center justify-center gap-3"
+                    disabled={validatingIds.includes(selectedSale.id)}
+                    className={cn(
+                      "flex-1 font-black py-5 rounded-2xl transition-all shadow-xl active:scale-95 flex items-center justify-center gap-3",
+                      validatingIds.includes(selectedSale.id)
+                        ? "bg-slate-100 text-slate-400"
+                        : "bg-brand-600 text-white hover:bg-brand-500 shadow-brand-600/20"
+                    )}
                   >
-                    <CheckCircle2 size={24} />
-                    Valider le paiement
+                    {validatingIds.includes(selectedSale.id) ? (
+                      <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-brand-600"></div>
+                    ) : (
+                      <>
+                        <CheckCircle2 size={24} />
+                        Valider le paiement
+                      </>
+                    )}
                   </button>
                 )}
                 <button

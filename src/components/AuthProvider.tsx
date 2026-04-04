@@ -8,7 +8,7 @@ interface AuthContextType {
   isAdmin: boolean;
   isAgent: boolean;
   login: (data: any) => Promise<void>;
-  register: (data: any) => Promise<void>;
+  register: (data: any) => Promise<any>;
   logout: () => void;
 }
 
@@ -18,7 +18,7 @@ const AuthContext = createContext<AuthContextType>({
   isAdmin: false,
   isAgent: false,
   login: async () => {},
-  register: async () => {},
+  register: async () => ({}),
   logout: () => {},
 });
 
@@ -52,9 +52,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const register = async (data: any) => {
-    const { user, token } = await api.auth.register(data);
+    const res = await api.auth.register(data);
+    if (res.pendingApproval) {
+      return res;
+    }
+    const { user, token } = res;
     localStorage.setItem('token', token);
     setUser(user);
+    return res;
   };
 
   const logout = () => {

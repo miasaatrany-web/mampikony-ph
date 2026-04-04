@@ -18,9 +18,15 @@ export const api = {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(data),
       });
-      if (!res.ok) throw new Error((await res.json()).message);
-      const { user, token } = await res.json();
-      return { user: { ...user, uid: user.id }, token };
+      if (!res.ok) {
+        const error = await res.json();
+        throw new Error(error.message || 'Email ou mot de passe incorrect');
+      }
+      const result = await res.json();
+      if (result.user) {
+        result.user = { ...result.user, uid: result.user.id };
+      }
+      return result;
     },
     register: async (data: any) => {
       const res = await fetch(`${API_URL}/auth/register`, {
@@ -28,9 +34,15 @@ export const api = {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(data),
       });
-      if (!res.ok) throw new Error((await res.json()).message);
-      const { user, token } = await res.json();
-      return { user: { ...user, uid: user.id }, token };
+      if (!res.ok) {
+        const error = await res.json();
+        throw new Error(error.message || 'Erreur lors de l\'inscription');
+      }
+      const result = await res.json();
+      if (result.user) {
+        result.user = { ...result.user, uid: result.user.id };
+      }
+      return result;
     },
     me: async () => {
       const res = await fetch(`${API_URL}/auth/me`, {
@@ -39,6 +51,27 @@ export const api = {
       if (!res.ok) throw new Error('Non autorisé');
       const user = await res.json();
       return { ...user, uid: user.id };
+    },
+    list: async (): Promise<any[]> => {
+      const res = await fetch(`${API_URL}/users`, { headers: getHeaders() });
+      if (!res.ok) throw new Error('Erreur lors de la récupération des utilisateurs');
+      return res.json();
+    },
+    approve: async (id: string) => {
+      const res = await fetch(`${API_URL}/users/${id}/approve`, {
+        method: 'PATCH',
+        headers: getHeaders(),
+      });
+      if (!res.ok) throw new Error('Erreur lors de l\'approbation de l\'utilisateur');
+      return res.json();
+    },
+    delete: async (id: string) => {
+      const res = await fetch(`${API_URL}/users/${id}`, {
+        method: 'DELETE',
+        headers: getHeaders(),
+      });
+      if (!res.ok) throw new Error('Erreur lors de la suppression de l\'utilisateur');
+      return res.json();
     }
   },
   products: {

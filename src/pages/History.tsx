@@ -196,36 +196,39 @@ const History: React.FC = () => {
                       </span>
                     </td>
                     <td className="px-8 py-6 text-right">
-                      <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <div className="flex items-center justify-end gap-2">
                         <button
                           onClick={() => setSelectedSale(sale)}
-                          className="p-2 text-slate-400 hover:text-brand-600 hover:bg-brand-50 rounded-xl transition-all"
+                          className="p-2 text-slate-400 hover:text-brand-600 hover:bg-brand-50 rounded-xl transition-all flex items-center gap-2"
                           title="Détails"
                         >
                           <FileText size={20} />
+                          <span className="text-[10px] font-bold lg:hidden">Détails</span>
                         </button>
                         {isAgent && !isAdmin && sale.status === 'pending' && (
                           <button
                             onClick={() => handleTransmit(sale.id)}
                             disabled={transmittingIds.includes(sale.id)}
                             className={cn(
-                              "p-2 rounded-xl transition-all",
+                              "p-2 rounded-xl transition-all flex items-center gap-2",
                               transmittingIds.includes(sale.id) 
                                 ? "text-slate-300 animate-pulse" 
-                                : "text-slate-400 hover:text-indigo-600 hover:bg-indigo-50"
+                                : "text-indigo-600 bg-indigo-50 hover:bg-indigo-100"
                             )}
                             title="Transmettre à l'Admin"
                           >
                             <Send size={20} />
+                            <span className="text-[10px] font-bold">Envoyer</span>
                           </button>
                         )}
                         {isAdmin && sale.status === 'pending' && (
                           <button
                             onClick={() => handleValidatePayment(sale.id)}
-                            className="p-2 text-slate-400 hover:text-brand-600 hover:bg-brand-50 rounded-xl transition-all"
+                            className="p-2 text-emerald-600 bg-emerald-50 hover:bg-emerald-100 rounded-xl transition-all flex items-center gap-2"
                             title="Valider Paiement"
                           >
                             <CheckCircle2 size={20} />
+                            <span className="text-[10px] font-bold">Valider</span>
                           </button>
                         )}
                         {isAdmin && (

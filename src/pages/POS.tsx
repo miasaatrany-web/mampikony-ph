@@ -390,7 +390,7 @@ const POS: React.FC = () => {
                 className={cn(
                   "w-full py-4 rounded-xl font-black text-sm flex items-center justify-center gap-3 transition-all active:scale-95 border-2",
                   cart.length > 0 && !isCheckingOut
-                    ? "border-indigo-500/30 text-indigo-400 hover:bg-indigo-600 hover:text-white hover:border-indigo-600 shadow-lg shadow-indigo-600/10"
+                    ? "bg-indigo-600 text-white border-indigo-400 hover:bg-indigo-500 shadow-lg shadow-indigo-600/30"
                     : "border-white/5 text-white/10 cursor-not-allowed"
                 )}
               >

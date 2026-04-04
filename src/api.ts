@@ -52,6 +52,7 @@ export const api = {
         headers: getHeaders(),
         body: JSON.stringify(data),
       });
+      if (!res.ok) throw new Error((await res.json()).message || 'Erreur lors de la création du produit');
       return res.json();
     },
     update: async (id: string, data: any): Promise<Product> => {
@@ -60,13 +61,15 @@ export const api = {
         headers: getHeaders(),
         body: JSON.stringify(data),
       });
+      if (!res.ok) throw new Error((await res.json()).message || 'Erreur lors de la mise à jour du produit');
       return res.json();
     },
     delete: async (id: string) => {
-      await fetch(`${API_URL}/products/${id}`, {
+      const res = await fetch(`${API_URL}/products/${id}`, {
         method: 'DELETE',
         headers: getHeaders(),
       });
+      if (!res.ok) throw new Error((await res.json()).message || 'Erreur lors de la suppression du produit');
     }
   },
   sales: {
@@ -80,6 +83,7 @@ export const api = {
         headers: getHeaders(),
         body: JSON.stringify(data),
       });
+      if (!res.ok) throw new Error((await res.json()).message || 'Erreur lors de la création de la vente');
       return res.json();
     },
     update: async (id: string, data: any): Promise<Sale> => {
@@ -88,13 +92,15 @@ export const api = {
         headers: getHeaders(),
         body: JSON.stringify(data),
       });
+      if (!res.ok) throw new Error((await res.json()).message || 'Erreur lors de la mise à jour de la vente');
       return res.json();
     },
     delete: async (id: string) => {
-      await fetch(`${API_URL}/sales/${id}`, {
+      const res = await fetch(`${API_URL}/sales/${id}`, {
         method: 'DELETE',
         headers: getHeaders(),
       });
+      if (!res.ok) throw new Error((await res.json()).message || 'Erreur lors de la suppression de la vente');
     }
   }
 };

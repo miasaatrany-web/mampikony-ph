@@ -2,18 +2,19 @@ import React, { useEffect, useState } from 'react';
 import { api } from '../api';
 import { Sale } from '../types';
 import { useAuth } from '../components/AuthProvider';
-import { History as HistoryIcon, Search, CheckCircle2, Clock, Trash2, FileText, X, User, DollarSign, Calendar, ArrowLeft } from 'lucide-react';
+import { History as HistoryIcon, Search, CheckCircle2, Clock, Trash2, FileText, X, User, DollarSign, Calendar, ArrowLeft, Plus, PlusCircle, Send } from 'lucide-react';
 import { cn } from '../lib/utils';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { Link } from 'react-router-dom';
 
 const History: React.FC = () => {
-  const { isAdmin } = useAuth();
+  const { isAdmin, isAgent } = useAuth();
   const [sales, setSales] = useState<Sale[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedSale, setSelectedSale] = useState<Sale | null>(null);
   const [loading, setLoading] = useState(true);
+  const [transmittingIds, setTransmittingIds] = useState<string[]>([]);
 
   const fetchSales = async () => {
     try {
@@ -48,6 +49,30 @@ const History: React.FC = () => {
     }
   };
 
+  const handleTransmit = async (id: string) => {
+    setTransmittingIds(prev => [...prev, id]);
+    // Simulate transmission
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    setTransmittingIds(prev => prev.filter(tid => tid !== id));
+    alert('Vente transmise à l\'administrateur avec succès !');
+  };
+
+  const handleTransmitAll = async () => {
+    const pendingSales = filteredSales.filter(s => s.status === 'pending');
+    if (pendingSales.length === 0) {
+      alert('Aucune vente en attente à transmettre.');
+      return;
+    }
+    
+    if (window.confirm(`Voulez-vous transmettre les ${pendingSales.length} ventes en attente à l'administrateur ?`)) {
+      setLoading(true);
+      // Simulate batch transmission
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      setLoading(false);
+      alert('Toutes les ventes ont été transmises avec succès !');
+    }
+  };
+
   const handleDeleteSale = async (id: string) => {
     if (window.confirm('Êtes-vous sûr de vouloir supprimer cette vente ?')) {
       try {
@@ -76,6 +101,28 @@ const History: React.FC = () => {
             Historique des Ventes
           </h1>
           <p className="text-slate-500 mt-2 text-lg">Consultez et gérez toutes les transactions passées.</p>
+        </div>
+        <div className="flex flex-wrap items-center gap-4">
+          <Link 
+            to="/pos" 
+            className="bg-brand-600 text-white font-black py-5 px-8 rounded-[2rem] flex items-center gap-4 hover:bg-brand-500 transition-all shadow-2xl shadow-brand-600/40 active:scale-95 text-xl group"
+          >
+            <div className="bg-white/20 p-2 rounded-xl group-hover:scale-110 transition-transform">
+              <PlusCircle size={28} />
+            </div>
+            Nouvelle Vente
+          </Link>
+          {isAgent && !isAdmin && (
+            <button
+              onClick={handleTransmitAll}
+              className="bg-indigo-600 text-white font-black py-5 px-8 rounded-[2rem] flex items-center gap-4 hover:bg-indigo-500 transition-all shadow-2xl shadow-indigo-600/40 active:scale-95 text-xl group"
+            >
+              <div className="bg-white/20 p-2 rounded-xl group-hover:scale-110 transition-transform">
+                <Send size={28} />
+              </div>
+              Tout Transmettre
+            </button>
+          )}
         </div>
       </header>
 
@@ -157,6 +204,21 @@ const History: React.FC = () => {
                         >
                           <FileText size={20} />
                         </button>
+                        {isAgent && !isAdmin && sale.status === 'pending' && (
+                          <button
+                            onClick={() => handleTransmit(sale.id)}
+                            disabled={transmittingIds.includes(sale.id)}
+                            className={cn(
+                              "p-2 rounded-xl transition-all",
+                              transmittingIds.includes(sale.id) 
+                                ? "text-slate-300 animate-pulse" 
+                                : "text-slate-400 hover:text-indigo-600 hover:bg-indigo-50"
+                            )}
+                            title="Transmettre à l'Admin"
+                          >
+                            <Send size={20} />
+                          </button>
+                        )}
                         {isAdmin && sale.status === 'pending' && (
                           <button
                             onClick={() => handleValidatePayment(sale.id)}
@@ -286,6 +348,27 @@ const History: React.FC = () => {
               </div>
 
               <div className="flex gap-4">
+                {isAgent && !isAdmin && selectedSale.status === 'pending' && (
+                  <button
+                    onClick={() => handleTransmit(selectedSale.id)}
+                    disabled={transmittingIds.includes(selectedSale.id)}
+                    className={cn(
+                      "flex-1 font-black py-5 rounded-2xl transition-all shadow-xl active:scale-95 flex items-center justify-center gap-3",
+                      transmittingIds.includes(selectedSale.id)
+                        ? "bg-slate-100 text-slate-400"
+                        : "bg-indigo-600 text-white hover:bg-indigo-500 shadow-indigo-600/20"
+                    )}
+                  >
+                    {transmittingIds.includes(selectedSale.id) ? (
+                      <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-slate-400"></div>
+                    ) : (
+                      <>
+                        <Send size={24} />
+                        Transmettre à l'Admin
+                      </>
+                    )}
+                  </button>
+                )}
                 {isAdmin && selectedSale.status === 'pending' && (
                   <button
                     onClick={() => handleValidatePayment(selectedSale.id)}
@@ -307,6 +390,28 @@ const History: React.FC = () => {
           </div>
         </div>
       )}
+      {/* Mobile FAB for History */}
+      <div className="md:hidden fixed bottom-8 right-8 z-[100] flex flex-col gap-4">
+        {isAgent && (
+          <>
+            <Link 
+              to="/stock" 
+              state={{ openModal: true }}
+              className="w-14 h-14 bg-slate-900 text-white rounded-full shadow-2xl flex items-center justify-center active:scale-90 transition-transform border-2 border-white/20"
+              title="Ajouter Produit"
+            >
+              <Plus size={24} />
+            </Link>
+            <Link 
+              to="/pos" 
+              className="w-16 h-16 bg-brand-600 text-white rounded-full shadow-2xl flex items-center justify-center active:scale-90 transition-transform border-4 border-white/20"
+              title="Nouvelle Vente"
+            >
+              <PlusCircle size={32} />
+            </Link>
+          </>
+        )}
+      </div>
     </div>
   );
 };

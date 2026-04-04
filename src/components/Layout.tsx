@@ -1,7 +1,7 @@
 import React from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from './AuthProvider';
-import { LayoutDashboard, Package, ShoppingCart, History, LogOut, User as UserIcon, Menu, X } from 'lucide-react';
+import { LayoutDashboard, Package, ShoppingCart, History, LogOut, User as UserIcon, Menu, X, Plus, PlusCircle } from 'lucide-react';
 import { cn } from '../lib/utils';
 
 const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -17,8 +17,8 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
 
   const navItems = [
     { label: 'Tableau de bord', path: '/', icon: LayoutDashboard, show: true },
-    { label: 'Stock', path: '/stock', icon: Package, show: isAgent },
-    { label: 'Caisse', path: '/pos', icon: ShoppingCart, show: isAgent },
+    { label: 'Nouvelle Vente', path: '/pos', icon: ShoppingCart, show: isAgent },
+    { label: 'Stock / Produits', path: '/stock', icon: Package, show: isAgent },
     { label: 'Historique', path: '/history', icon: History, show: true },
   ];
 
@@ -35,6 +35,16 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
           Mampikony
         </Link>
         <div className="flex items-center gap-3">
+          {isAgent && (
+            <Link 
+              to="/stock" 
+              state={{ openModal: true }}
+              className="w-12 h-12 rounded-2xl bg-brand-600 text-white flex items-center justify-center shadow-lg shadow-brand-600/20"
+              title="Ajouter Produit"
+            >
+              <Plus size={24} />
+            </Link>
+          )}
           <button 
             onClick={handleLogout}
             className="w-12 h-12 rounded-2xl bg-rose-500/20 text-rose-500 flex items-center justify-center hover:bg-rose-500 hover:text-white transition-colors border border-rose-500/20"
@@ -67,7 +77,7 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
             </div>
           </Link>
 
-          <nav className="flex-1 space-y-2">
+          <nav className="space-y-2 mb-10">
             <p className="px-4 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-4">Menu Principal</p>
             {navItems.filter(item => item.show).map((item) => (
               <Link
@@ -92,6 +102,33 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
               </Link>
             ))}
           </nav>
+
+          {isAgent && (
+            <div className="space-y-4 mb-10">
+              <p className="px-4 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-4">Actions Rapides</p>
+              <Link 
+                to="/pos"
+                onClick={() => setIsMobileMenuOpen(false)}
+                className="flex items-center gap-4 w-full px-5 py-4 rounded-2xl bg-brand-600 text-white hover:bg-brand-500 transition-all shadow-lg shadow-brand-600/20 font-black uppercase tracking-widest text-[10px] group active:scale-95"
+              >
+                <div className="w-8 h-8 rounded-lg bg-white/20 flex items-center justify-center group-hover:scale-110 transition-transform">
+                  <PlusCircle size={18} />
+                </div>
+                Nouvelle Vente
+              </Link>
+              <Link 
+                to="/stock"
+                state={{ openModal: true }}
+                onClick={() => setIsMobileMenuOpen(false)}
+                className="flex items-center gap-4 w-full px-5 py-4 rounded-2xl bg-slate-900 text-white hover:bg-slate-800 transition-all shadow-lg shadow-slate-900/20 font-black uppercase tracking-widest text-[10px] group active:scale-95"
+              >
+                <div className="w-8 h-8 rounded-lg bg-white/20 flex items-center justify-center group-hover:scale-110 transition-transform">
+                  <Plus size={18} />
+                </div>
+                Ajouter Produit
+              </Link>
+            </div>
+          )}
 
           <div className="mt-auto pt-8 border-t border-slate-100 space-y-6">
             <div className="flex items-center gap-4 p-5 bg-slate-50 rounded-3xl border border-slate-100 group hover:border-brand-200 transition-colors">

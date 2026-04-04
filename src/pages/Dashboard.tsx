@@ -3,7 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../components/AuthProvider';
 import { api } from '../api';
 import { Product, Sale } from '../types';
-import { Package, ShoppingCart, AlertTriangle, TrendingUp, Clock, CheckCircle2, XCircle, ArrowRight, Plus, LogOut } from 'lucide-react';
+import { Package, ShoppingCart, AlertTriangle, TrendingUp, Clock, CheckCircle2, XCircle, ArrowRight, Plus, LogOut, PlusCircle } from 'lucide-react';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { cn } from '../lib/utils';
@@ -84,7 +84,14 @@ const Dashboard: React.FC = () => {
           </p>
         </div>
         <div className="flex items-center gap-4">
-          <div className="bg-white px-5 py-3 rounded-2xl border border-slate-200 shadow-sm flex items-center gap-3">
+          <Link 
+            to="/pos" 
+            className="bg-brand-600 text-white px-8 py-4 rounded-2xl font-black text-lg flex items-center gap-3 hover:bg-brand-500 transition-all shadow-xl shadow-brand-600/30 active:scale-95 group"
+          >
+            <PlusCircle size={24} className="group-hover:rotate-90 transition-transform duration-300" />
+            Nouvelle Vente
+          </Link>
+          <div className="hidden sm:flex bg-white px-5 py-3 rounded-2xl border border-slate-200 shadow-sm items-center gap-3">
             <div className="w-2.5 h-2.5 rounded-full bg-brand-500 animate-pulse" />
             <span className="text-sm font-black text-slate-600 uppercase tracking-widest">Système en ligne</span>
           </div>
@@ -93,7 +100,7 @@ const Dashboard: React.FC = () => {
               logout();
               navigate('/login');
             }}
-            className="bg-rose-50 text-rose-600 px-6 py-3 rounded-2xl hover:bg-rose-600 hover:text-white transition-all shadow-sm active:scale-95 group flex items-center gap-3 font-black uppercase tracking-widest text-xs"
+            className="bg-rose-50 text-rose-600 px-6 py-4 rounded-2xl hover:bg-rose-600 hover:text-white transition-all shadow-sm active:scale-95 group flex items-center gap-3 font-black uppercase tracking-widest text-xs"
             title="Déconnexion"
           >
             <LogOut size={20} />
@@ -268,6 +275,28 @@ const Dashboard: React.FC = () => {
             </div>
           </div>
         </div>
+      </div>
+      {/* Mobile FAB */}
+      <div className="md:hidden fixed bottom-8 right-8 z-[100] flex flex-col gap-4">
+        {isAgent && (
+          <>
+            <Link 
+              to="/stock" 
+              state={{ openModal: true }}
+              className="w-14 h-14 bg-slate-900 text-white rounded-full shadow-2xl flex items-center justify-center active:scale-90 transition-transform border-2 border-white/20"
+              title="Ajouter Produit"
+            >
+              <Plus size={24} />
+            </Link>
+            <Link 
+              to="/pos" 
+              className="w-16 h-16 bg-brand-600 text-white rounded-full shadow-2xl flex items-center justify-center active:scale-90 transition-transform border-4 border-white/20"
+              title="Nouvelle Vente"
+            >
+              <PlusCircle size={32} />
+            </Link>
+          </>
+        )}
       </div>
     </div>
   );

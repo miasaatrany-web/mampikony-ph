@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { api } from '../api';
 import { Product } from '../types';
 import { useAuth } from '../components/AuthProvider';
-import { Package, Plus, Search, Edit2, Trash2, X, AlertCircle, Calendar, DollarSign, Layers, ArrowLeft } from 'lucide-react';
+import { Package, Plus, Search, Edit2, Trash2, X, AlertCircle, Calendar, DollarSign, Layers, ArrowLeft, PlusCircle } from 'lucide-react';
 import { cn } from '../lib/utils';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
@@ -122,17 +122,28 @@ const Stock: React.FC = () => {
           <h1 className="text-4xl font-black text-slate-900 tracking-tight">Gestion du Stock</h1>
           <p className="text-slate-500 mt-2 text-lg">Gérez l'inventaire de vos médicaments en temps réel.</p>
         </div>
-        {isAgent && (
-          <button
-            onClick={() => handleOpenModal()}
-            className="bg-brand-600 text-white font-black py-5 px-10 rounded-[2rem] flex items-center gap-4 hover:bg-brand-500 transition-all shadow-2xl shadow-brand-600/40 active:scale-95 text-xl group"
+        <div className="flex flex-wrap items-center gap-4">
+          <Link 
+            to="/pos" 
+            className="bg-slate-900 text-white font-black py-5 px-8 rounded-[2rem] flex items-center gap-4 hover:bg-slate-800 transition-all shadow-2xl shadow-slate-900/40 active:scale-95 text-xl group"
           >
             <div className="bg-white/20 p-2 rounded-xl group-hover:scale-110 transition-transform">
-              <Plus size={28} />
+              <PlusCircle size={28} />
             </div>
-            Ajouter un produit
-          </button>
-        )}
+            Nouvelle Vente
+          </Link>
+          {isAgent && (
+            <button
+              onClick={() => handleOpenModal()}
+              className="bg-brand-600 text-white font-black py-5 px-10 rounded-[2rem] flex items-center gap-4 hover:bg-brand-500 transition-all shadow-2xl shadow-brand-600/40 active:scale-95 text-xl group"
+            >
+              <div className="bg-white/20 p-2 rounded-xl group-hover:scale-110 transition-transform">
+                <Plus size={28} />
+              </div>
+              Ajouter un produit
+            </button>
+          )}
+        </div>
       </header>
 
       {/* Search and Filters */}
@@ -381,6 +392,27 @@ const Stock: React.FC = () => {
           </div>
         </div>
       )}
+      {/* Mobile FAB for Stock */}
+      <div className="md:hidden fixed bottom-8 right-8 z-[100] flex flex-col gap-4">
+        {isAgent && (
+          <>
+            <button
+              onClick={() => handleOpenModal()}
+              className="w-14 h-14 bg-slate-900 text-white rounded-full shadow-2xl flex items-center justify-center active:scale-90 transition-transform border-2 border-white/20"
+              title="Ajouter Produit"
+            >
+              <Plus size={24} />
+            </button>
+            <Link 
+              to="/pos" 
+              className="w-16 h-16 bg-brand-600 text-white rounded-full shadow-2xl flex items-center justify-center active:scale-90 transition-transform border-4 border-white/20"
+              title="Nouvelle Vente"
+            >
+              <PlusCircle size={32} />
+            </Link>
+          </>
+        )}
+      </div>
     </div>
   );
 };

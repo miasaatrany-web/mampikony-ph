@@ -1,0 +1,5 @@
+{
+  "name": "Pharmacie Mampikony",
+  "description": "Système complet de gestion de stock et de caisse pour pharmacie avec rôles Admin et Agent.",
+  "requestFramePermissions": []
+}

@@ -9,6 +9,24 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const navigate = useNavigate();
   const location = useLocation();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = React.useState(false);
+  const [pendingCount, setPendingCount] = React.useState(0);
+
+  React.useEffect(() => {
+    if (isAdmin) {
+      const fetchPending = async () => {
+        try {
+          const users = await api.auth.list();
+          setPendingCount(users.filter((u: any) => !u.approved).length);
+        } catch (err) {
+          console.error(err);
+        }
+      };
+      fetchPending();
+      // Refresh every 30 seconds
+      const interval = setInterval(fetchPending, 30000);
+      return () => clearInterval(interval);
+    }
+  }, [isAdmin]);
 
   const handleLogout = async () => {
     logout();
@@ -99,7 +117,12 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
                   "transition-all duration-300",
                   location.pathname === item.path ? "text-brand-500 scale-110" : "text-slate-400 group-hover:text-brand-600 group-hover:scale-110"
                 )} />
-                <span className="tracking-tight text-lg">{item.label}</span>
+                <span className="tracking-tight text-lg flex-1">{item.label}</span>
+                {item.path === '/agents' && pendingCount > 0 && (
+                  <span className="bg-amber-500 text-white text-[10px] font-black px-2 py-1 rounded-full animate-pulse shadow-lg shadow-amber-500/20">
+                    {pendingCount}
+                  </span>
+                )}
               </Link>
             ))}
           </nav>

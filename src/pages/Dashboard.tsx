@@ -228,13 +228,36 @@ const Dashboard: React.FC = () => {
                       </td>
                       <td className="px-8 py-5 font-black text-slate-900">{sale.total.toLocaleString()} Ar</td>
                       <td className="px-8 py-5">
-                        <span className={cn(
-                          "px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider flex items-center gap-1 w-fit",
-                          sale.status === 'paid' ? "bg-brand-100 text-brand-700" : "bg-amber-100 text-amber-700"
-                        )}>
-                          {sale.status === 'paid' ? <CheckCircle2 size={14} /> : <Clock size={14} />}
-                          {sale.status === 'paid' ? 'Payé' : 'En attente'}
-                        </span>
+                        <div className="flex items-center gap-3">
+                          <span className={cn(
+                            "px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider flex items-center gap-1 w-fit",
+                            sale.status === 'paid' ? "bg-brand-100 text-brand-700" : "bg-amber-100 text-amber-700"
+                          )}>
+                            {sale.status === 'paid' ? <CheckCircle2 size={14} /> : <Clock size={14} />}
+                            {sale.status === 'paid' ? 'Payé' : 'En attente'}
+                          </span>
+                          {isAdmin && sale.status === 'pending' && (
+                            <button
+                              onClick={async (e) => {
+                                e.preventDefault();
+                                if (window.confirm('Confirmer le paiement ?')) {
+                                  try {
+                                    await api.sales.update(sale.id, { status: 'paid' });
+                                    // Refresh data
+                                    const salesData = await api.sales.list();
+                                    setRecentSales(salesData.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()).slice(0, 5));
+                                  } catch (err) {
+                                    console.error(err);
+                                  }
+                                }
+                              }}
+                              className="p-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-500 transition-all shadow-sm active:scale-90"
+                              title="Valider le paiement"
+                            >
+                              <CheckCircle2 size={16} />
+                            </button>
+                          )}
+                        </div>
                       </td>
                     </tr>
                   ))

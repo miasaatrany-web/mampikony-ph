@@ -128,27 +128,28 @@ const Agents: React.FC = () => {
                     <p className="text-slate-400 font-bold text-sm">{user.email}</p>
                   </div>
                 </div>
-                <div className="flex gap-3">
+                <div className="flex flex-col gap-3">
                   <button
                     onClick={() => handleApprove(user.id)}
                     disabled={actionLoading === user.id}
-                    className="flex-1 bg-emerald-600 text-white font-black py-4 rounded-2xl hover:bg-emerald-500 transition-all shadow-lg shadow-emerald-600/20 active:scale-95 flex items-center justify-center gap-2"
+                    className="w-full bg-emerald-600 text-white font-black py-5 rounded-2xl hover:bg-emerald-500 transition-all shadow-xl shadow-emerald-600/20 active:scale-95 flex items-center justify-center gap-3 text-lg"
                   >
                     {actionLoading === user.id ? (
-                      <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+                      <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-white"></div>
                     ) : (
                       <>
-                        <Check size={20} />
-                        Approuver
+                        <Check size={24} />
+                        Confirmer l'inscription
                       </>
                     )}
                   </button>
                   <button
                     onClick={() => handleDelete(user.id)}
                     disabled={actionLoading === user.id}
-                    className="w-14 bg-rose-50 text-rose-600 hover:bg-rose-600 hover:text-white transition-all rounded-2xl flex items-center justify-center active:scale-95"
+                    className="w-full bg-rose-50 text-rose-600 hover:bg-rose-600 hover:text-white font-black py-4 rounded-2xl transition-all active:scale-95 flex items-center justify-center gap-2 text-sm uppercase tracking-widest"
                   >
-                    <XIcon size={20} />
+                    <XIcon size={18} />
+                    Rejeter et Supprimer
                   </button>
                 </div>
               </div>
@@ -184,13 +185,15 @@ const Agents: React.FC = () => {
             approvedUsers.map((user) => (
               <div key={user.id} className="bg-white p-8 rounded-[2.5rem] border border-slate-100 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all group relative">
                 {isAdmin && user.role !== 'admin' && (
-                  <button
-                    onClick={() => handleDelete(user.id)}
-                    className="absolute top-6 right-6 p-2 text-slate-300 hover:text-rose-600 hover:bg-rose-50 rounded-xl transition-all opacity-0 group-hover:opacity-100"
-                    title="Supprimer l'agent"
-                  >
-                    <Trash2 size={18} />
-                  </button>
+                  <div className="absolute top-6 right-6 flex gap-2">
+                    <button
+                      onClick={() => handleDelete(user.id)}
+                      className="p-3 text-rose-600 bg-rose-50 hover:bg-rose-600 hover:text-white rounded-xl transition-all shadow-sm"
+                      title="Supprimer l'agent"
+                    >
+                      <Trash2 size={20} />
+                    </button>
+                  </div>
                 )}
                 <div className="flex items-center gap-5 mb-8">
                   <div className="w-16 h-16 rounded-2xl bg-slate-50 flex items-center justify-center text-brand-600 group-hover:bg-brand-600 group-hover:text-white transition-colors">

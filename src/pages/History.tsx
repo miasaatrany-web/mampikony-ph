@@ -252,19 +252,19 @@ const History: React.FC = () => {
                             onClick={() => handleValidatePayment(sale.id)}
                             disabled={validatingIds.includes(sale.id)}
                             className={cn(
-                              "p-2 rounded-xl transition-all flex items-center gap-2",
+                              "px-4 py-2 rounded-xl transition-all flex items-center gap-2 font-black uppercase tracking-widest text-[10px] shadow-lg active:scale-95",
                               validatingIds.includes(sale.id)
-                                ? "text-slate-300 animate-pulse"
-                                : "text-emerald-600 bg-emerald-50 hover:bg-emerald-100"
+                                ? "bg-slate-100 text-slate-300 animate-pulse"
+                                : "bg-emerald-600 text-white hover:bg-emerald-500 shadow-emerald-600/20"
                             )}
                             title="Valider Paiement"
                           >
                             {validatingIds.includes(sale.id) ? (
-                              <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-emerald-600"></div>
+                              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
                             ) : (
-                              <CheckCircle2 size={20} />
+                              <CheckCircle2 size={16} />
                             )}
-                            <span className="text-[10px] font-bold">Valider</span>
+                            Valider
                           </button>
                         )}
                         {isAdmin && (

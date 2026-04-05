@@ -149,7 +149,7 @@ const Dashboard: React.FC = () => {
           </div>
           <Link 
             to="/agents" 
-            className="bg-slate-900 text-white px-8 py-4 rounded-2xl font-black text-sm uppercase tracking-widest hover:bg-slate-800 transition-all shadow-lg active:scale-95 flex items-center gap-2"
+            className="btn-info !px-8 !py-4 !text-sm"
           >
             <Users size={18} />
             Gérer les demandes
@@ -183,7 +183,7 @@ const Dashboard: React.FC = () => {
           <div className="flex flex-wrap gap-5 justify-center">
             <Link 
               to="/pos" 
-              className="bg-brand-600 text-white px-8 py-5 rounded-[1.5rem] font-black text-lg flex items-center gap-3 hover:bg-brand-500 transition-all shadow-xl shadow-brand-600/30 active:scale-95"
+              className="btn-primary !px-8 !py-5 !text-lg"
             >
               <ShoppingCart size={24} />
               Nouvelle Vente
@@ -192,15 +192,15 @@ const Dashboard: React.FC = () => {
               <Link 
                 to="/stock" 
                 state={{ openModal: true }}
-                className="bg-white text-slate-900 px-8 py-5 rounded-[1.5rem] font-black text-lg flex items-center gap-3 hover:bg-slate-100 transition-all shadow-xl active:scale-95"
+                className="btn-info !px-8 !py-5 !text-lg"
               >
-                <Plus size={24} className="text-brand-600" />
+                <Plus size={24} />
                 Ajouter Produit
               </Link>
             )}
             <Link 
               to="/stock" 
-              className="bg-white/10 backdrop-blur-md text-white px-8 py-5 rounded-[1.5rem] font-black text-lg flex items-center gap-3 hover:bg-white/20 transition-all border border-white/10 active:scale-95"
+              className="btn-secondary !px-8 !py-5 !text-lg !bg-white/10 !text-white !border-white/20 hover:!bg-white/20"
             >
               <Package size={24} />
               Gérer le Stock
@@ -260,7 +260,7 @@ const Dashboard: React.FC = () => {
                                   }
                                 }
                               }}
-                              className="px-3 py-1.5 bg-emerald-600 text-white rounded-lg hover:bg-emerald-500 transition-all shadow-sm active:scale-90 flex items-center gap-2 text-[10px] font-black uppercase tracking-widest"
+                              className="btn-primary !px-3 !py-1.5 !text-[10px]"
                             >
                               <CheckCircle2 size={14} />
                               Valider

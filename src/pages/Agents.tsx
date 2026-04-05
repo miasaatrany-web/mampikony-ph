@@ -179,7 +179,7 @@ const Agents: React.FC = () => {
                   <button
                     onClick={() => handleApprove(user.uid)}
                     disabled={actionLoading === user.uid}
-                    className="w-full bg-emerald-600 text-white font-black py-5 rounded-2xl hover:bg-emerald-500 transition-all shadow-xl shadow-emerald-600/20 active:scale-95 flex items-center justify-center gap-3 text-lg"
+                    className="btn-primary !w-full !py-5 !text-lg"
                   >
                     {actionLoading === user.uid ? (
                       <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-white"></div>
@@ -193,7 +193,7 @@ const Agents: React.FC = () => {
                   <button
                     onClick={() => handleDelete(user.uid, user.email)}
                     disabled={actionLoading === user.uid}
-                    className="w-full bg-danger-50 text-danger-600 hover:bg-danger-600 hover:text-white font-black py-4 rounded-2xl transition-all active:scale-95 flex items-center justify-center gap-2 text-sm uppercase tracking-widest"
+                    className="btn-danger !w-full !py-4 !text-sm"
                   >
                     <XIcon size={18} />
                     Rejeter et Supprimer
@@ -237,7 +237,7 @@ const Agents: React.FC = () => {
                       <button
                         onClick={() => handleUpdateRole(user.uid, 'admin')}
                         disabled={actionLoading === user.uid}
-                        className="px-4 py-2 text-brand-600 bg-brand-50 hover:bg-brand-600 hover:text-white rounded-xl transition-all shadow-sm flex items-center gap-2 text-xs font-black uppercase tracking-widest border border-brand-100"
+                        className="btn-info !px-4 !py-2 !text-[10px]"
                       >
                         <Shield size={16} />
                         Promouvoir Admin
@@ -246,7 +246,7 @@ const Agents: React.FC = () => {
                       <button
                         onClick={() => handleUpdateRole(user.uid, 'agent')}
                         disabled={actionLoading === user.uid}
-                        className="px-4 py-2 text-amber-600 bg-amber-50 hover:bg-amber-600 hover:text-white rounded-xl transition-all shadow-sm flex items-center gap-2 text-xs font-black uppercase tracking-widest border border-amber-100"
+                        className="btn-secondary !px-4 !py-2 !text-[10px]"
                       >
                         <ShieldAlert size={16} />
                         Rétrograder Agent
@@ -255,7 +255,7 @@ const Agents: React.FC = () => {
                     <button
                       onClick={() => handleDelete(user.uid, user.email)}
                       disabled={actionLoading === user.uid}
-                      className="px-4 py-2 text-danger-600 bg-danger-50 hover:bg-danger-600 hover:text-white rounded-xl transition-all shadow-sm flex items-center gap-2 text-xs font-black uppercase tracking-widest border border-danger-100"
+                      className="btn-danger !px-4 !py-2 !text-[10px]"
                     >
                       <Trash2 size={16} />
                       Supprimer

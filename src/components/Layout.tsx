@@ -67,7 +67,7 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
           )}
           <button 
             onClick={handleLogout}
-            className="w-12 h-12 rounded-2xl bg-danger-500/20 text-danger-500 flex items-center justify-center hover:bg-danger-500 hover:text-white transition-colors border border-danger-500/20"
+            className="btn-danger !w-12 !h-12 !p-0 !rounded-2xl !text-white !shadow-none"
             title="Déconnexion"
           >
             <LogOut size={24} />
@@ -134,7 +134,7 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
               <Link 
                 to="/pos"
                 onClick={() => setIsMobileMenuOpen(false)}
-                className="flex items-center gap-4 w-full px-5 py-4 rounded-2xl bg-brand-600 text-white hover:bg-brand-500 transition-all shadow-lg shadow-brand-600/20 font-black uppercase tracking-widest text-[10px] group active:scale-95"
+                className="btn-primary !w-full !px-5 !py-4 !text-[10px] !rounded-2xl"
               >
                 <div className="w-8 h-8 rounded-lg bg-white/20 flex items-center justify-center group-hover:scale-110 transition-transform">
                   <PlusCircle size={18} />
@@ -145,7 +145,7 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
                 to="/stock"
                 state={{ openModal: true }}
                 onClick={() => setIsMobileMenuOpen(false)}
-                className="flex items-center gap-4 w-full px-5 py-4 rounded-2xl bg-slate-900 text-white hover:bg-slate-800 transition-all shadow-lg shadow-slate-900/20 font-black uppercase tracking-widest text-[10px] group active:scale-95"
+                className="btn-info !w-full !px-5 !py-4 !text-[10px] !rounded-2xl"
               >
                 <div className="w-8 h-8 rounded-lg bg-white/20 flex items-center justify-center group-hover:scale-110 transition-transform">
                   <Plus size={18} />

@@ -288,7 +288,7 @@ const POS: React.FC = () => {
             {cart.length > 0 && (
               <button 
                 onClick={() => setCart([])}
-                className="text-white/40 hover:text-danger-500 transition-colors p-2 rounded-lg hover:bg-danger-500/10"
+                className="btn-danger !p-2 !rounded-xl !shadow-none !bg-danger-500/10 !text-danger-500 hover:!bg-danger-500 hover:!text-white"
                 title="Vider"
               >
                 <Trash2 size={18} />
@@ -369,10 +369,8 @@ const POS: React.FC = () => {
               onClick={() => handleCheckout(false)}
               disabled={cart.length === 0 || isCheckingOut}
               className={cn(
-                "w-full py-4 rounded-xl font-black text-lg flex items-center justify-center gap-3 transition-all shadow-xl active:scale-95",
-                cart.length > 0 && !isCheckingOut
-                  ? "bg-brand-600 text-white hover:bg-brand-500 shadow-brand-600/30"
-                  : "bg-white/5 text-white/20 cursor-not-allowed"
+                "btn-primary !w-full !py-4 !text-lg",
+                (cart.length === 0 || isCheckingOut) && "opacity-50 cursor-not-allowed shadow-none"
               )}
             >
               {isCheckingOut ? (
@@ -390,10 +388,8 @@ const POS: React.FC = () => {
                 onClick={() => handleCheckout(true)}
                 disabled={cart.length === 0 || isCheckingOut}
                 className={cn(
-                  "w-full py-4 rounded-xl font-black text-sm flex items-center justify-center gap-3 transition-all active:scale-95 border-2",
-                  cart.length > 0 && !isCheckingOut
-                    ? "bg-indigo-600 text-white border-indigo-400 hover:bg-indigo-500 shadow-lg shadow-indigo-600/30"
-                    : "border-white/5 text-white/10 cursor-not-allowed"
+                  "btn-info !w-full !py-4 !text-sm",
+                  (cart.length === 0 || isCheckingOut) && "opacity-50 cursor-not-allowed shadow-none"
                 )}
               >
                 <Send size={18} />

@@ -31,7 +31,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [user, setUser] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
 
-  const isAdmin = user?.role === 'admin' || user?.email === 'miasaatrany@gmail.com';
+  const isAdmin = user?.role === 'admin' || auth.currentUser?.email === 'miasaatrany@gmail.com';
   const isAgent = user?.role === 'agent' || isAdmin;
 
   useEffect(() => {

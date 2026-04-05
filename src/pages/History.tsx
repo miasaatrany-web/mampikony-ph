@@ -226,25 +226,23 @@ const History: React.FC = () => {
                       <div className="flex items-center justify-end gap-2">
                         <button
                           onClick={() => setSelectedSale(sale)}
-                          className="px-3 py-2 text-slate-500 hover:text-brand-600 hover:bg-brand-50 rounded-xl transition-all flex items-center gap-2 border border-transparent hover:border-brand-100"
+                          className="btn-info !px-3 !py-2 !text-[10px]"
                         >
                           <FileText size={18} />
-                          <span className="text-[10px] font-black uppercase tracking-widest">Détails</span>
+                          Détails
                         </button>
                         {isAgent && !isAdmin && sale.status === 'pending' && (
                           <button
                             onClick={() => handleTransmit(sale.id)}
                             disabled={transmittingIds.includes(sale.id)}
                             className={cn(
-                              "p-2 rounded-xl transition-all flex items-center gap-2",
-                              transmittingIds.includes(sale.id) 
-                                ? "text-slate-300 animate-pulse" 
-                                : "text-indigo-600 bg-indigo-50 hover:bg-indigo-100"
+                              "btn-info !px-3 !py-2 !text-[10px]",
+                              transmittingIds.includes(sale.id) && "opacity-50 animate-pulse cursor-not-allowed"
                             )}
                             title="Transmettre à l'Admin"
                           >
-                            <Send size={20} />
-                            <span className="text-[10px] font-bold">Envoyer</span>
+                            <Send size={16} />
+                            Envoyer
                           </button>
                         )}
                         {isAdmin && sale.status === 'pending' && (
@@ -252,10 +250,8 @@ const History: React.FC = () => {
                             onClick={() => handleValidatePayment(sale.id)}
                             disabled={validatingIds.includes(sale.id)}
                             className={cn(
-                              "px-4 py-2 rounded-xl transition-all flex items-center gap-2 font-black uppercase tracking-widest text-[10px] shadow-lg active:scale-95",
-                              validatingIds.includes(sale.id)
-                                ? "bg-slate-100 text-slate-300 animate-pulse"
-                                : "bg-emerald-600 text-white hover:bg-emerald-500 shadow-emerald-600/20"
+                              "btn-primary !px-4 !py-2 !text-[10px]",
+                              validatingIds.includes(sale.id) && "opacity-50 animate-pulse cursor-not-allowed"
                             )}
                             title="Valider Paiement"
                           >
@@ -270,7 +266,7 @@ const History: React.FC = () => {
                         {isAdmin && (
                           <button
                             onClick={() => handleDeleteSale(sale.id)}
-                            className="p-2 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-xl transition-all"
+                            className="btn-danger !p-2 !rounded-xl"
                             title="Supprimer"
                           >
                             <Trash2 size={20} />

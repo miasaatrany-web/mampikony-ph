@@ -238,7 +238,7 @@ const Stock: React.FC = () => {
                           {isAgent && (
                             <button
                               onClick={() => handleOpenModal(product)}
-                              className="px-4 py-2 flex items-center gap-2 bg-brand-50 text-brand-600 hover:bg-brand-600 hover:text-white rounded-xl transition-all shadow-sm active:scale-95 border border-brand-100 text-xs font-black uppercase tracking-widest"
+                              className="btn-info !px-4 !py-2 !text-[10px]"
                             >
                               <Edit2 size={16} />
                               Modifier
@@ -247,7 +247,7 @@ const Stock: React.FC = () => {
                           {isAdmin && (
                             <button
                               onClick={() => handleDelete(product.id)}
-                              className="px-4 py-2 flex items-center gap-2 bg-danger-50 text-danger-600 hover:bg-danger-600 hover:text-white rounded-xl transition-all shadow-sm active:scale-95 border border-danger-100 text-xs font-black uppercase tracking-widest"
+                              className="btn-danger !px-4 !py-2 !text-[10px]"
                             >
                               <Trash2 size={16} />
                               Supprimer
@@ -384,7 +384,7 @@ const Stock: React.FC = () => {
                 </button>
                 <button
                   type="submit"
-                  className="flex-1 px-4 py-3 bg-green-600 text-white font-bold rounded-xl hover:bg-green-700 transition-all shadow-lg shadow-green-600/20"
+                  className="btn-primary flex-1"
                 >
                   {editingProduct ? 'Mettre à jour' : 'Ajouter'}
                 </button>

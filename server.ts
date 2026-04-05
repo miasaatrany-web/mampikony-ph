@@ -29,8 +29,9 @@ const saveDb = (data: any) => {
   fs.writeFileSync(DB_FILE, JSON.stringify(data, null, 2));
 };
 
+const app = express();
+
 async function startServer() {
-  const app = express();
   const PORT = 3000;
 
   app.use(cors());
@@ -266,4 +267,8 @@ async function startServer() {
   });
 }
 
-startServer();
+export default app;
+
+if (process.env.NODE_ENV !== 'production' || !process.env.VERCEL) {
+  startServer();
+}

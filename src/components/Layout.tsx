@@ -1,6 +1,7 @@
 import React from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from './AuthProvider';
+import { api } from '../api';
 import { LayoutDashboard, Package, ShoppingCart, History, LogOut, User as UserIcon, Menu, X, Plus, PlusCircle, Users } from 'lucide-react';
 import { cn } from '../lib/utils';
 

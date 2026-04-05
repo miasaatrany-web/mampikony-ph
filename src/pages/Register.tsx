@@ -13,8 +13,14 @@ const Register: React.FC = () => {
   const [success, setSuccess] = useState('');
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
-  const { register, loginWithGoogle } = useAuth();
+  const { register, loginWithGoogle, user, loading: authLoading } = useAuth();
   
+  React.useEffect(() => {
+    if (!authLoading && user) {
+      navigate('/');
+    }
+  }, [user, authLoading, navigate]);
+
     const handleGoogleLogin = async () => {
       setError('');
       setLoading(true);
@@ -40,6 +46,11 @@ const Register: React.FC = () => {
     setLoading(true);
 
     try {
+      if (email === 'miasaatrany@gmail.com') {
+        setError('Cet email est le compte administrateur principal. Veuillez vous connecter au lieu de vous inscrire.');
+        setLoading(false);
+        return;
+      }
       const res: any = await register({ email, password, displayName, role });
       if (res.pendingApproval) {
         setSuccess(res.message);
@@ -123,6 +134,9 @@ const Register: React.FC = () => {
                       (() => {
                         try {
                           const errObj = JSON.parse(error);
+                          if (errObj.error.includes('Missing or insufficient permissions')) {
+                            return "Erreur de permissions Firestore. Vérifiez que tous les champs sont valides.";
+                          }
                           return `Erreur Firestore (${errObj.operationType}) sur ${errObj.path}: ${errObj.error}`;
                         } catch {
                           return error;
@@ -149,9 +163,9 @@ const Register: React.FC = () => {
                   </Link>
                 </div>
               )}
-              {error.includes('insufficient permissions') && (
+              {error.includes('unauthorized-domain') && (
                 <div className="mt-2 p-2 bg-white/50 rounded border border-red-100 text-[10px] text-red-500 italic">
-                  Note: Cela peut être dû à une validation de données échouée dans les règles de sécurité.
+                  Note: Ce domaine n'est pas autorisé dans Firebase. Ajoutez-le dans Authentication &rarr; Settings &rarr; Authorized Domains.
                 </div>
               )}
             </div>

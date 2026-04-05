@@ -11,10 +11,16 @@ const Login: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
-    const { login, loginWithGoogle } = useAuth();
+    const { login, loginWithGoogle, user, loading: authLoading } = useAuth();
   
     const from = location.state?.from?.pathname || '/';
-  
+
+    React.useEffect(() => {
+      if (!authLoading && user) {
+        navigate(from, { replace: true });
+      }
+    }, [user, authLoading, navigate, from]);
+
     const handleGoogleLogin = async () => {
       setError('');
       setLoading(true);
@@ -42,8 +48,15 @@ const Login: React.FC = () => {
       await login({ email, password });
       navigate(from, { replace: true });
     } catch (err: any) {
-      setError(err.message || 'Email ou mot de passe incorrect.');
-      console.error(err);
+      console.error('Login Error:', err);
+      let errorMessage = err.message || 'Email ou mot de passe incorrect.';
+      
+      // If it's a standard auth error, we can be more specific
+      if (err.code === 'auth/wrong-password' || err.code === 'auth/invalid-credential' || err.message.includes('incorrect')) {
+        errorMessage = 'Email ou mot de passe incorrect. Si vous avez créé votre compte avec Google, veuillez utiliser le bouton Google ci-dessous.';
+      }
+      
+      setError(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -72,6 +85,9 @@ const Login: React.FC = () => {
                       (() => {
                         try {
                           const errObj = JSON.parse(error);
+                          if (errObj.error.includes('Missing or insufficient permissions')) {
+                            return "Erreur de permissions Firestore. Votre compte n'est peut-être pas encore approuvé.";
+                          }
                           return `Erreur Firestore (${errObj.operationType}) sur ${errObj.path}: ${errObj.error}`;
                         } catch {
                           return error;
@@ -81,6 +97,11 @@ const Login: React.FC = () => {
                   </p>
                 </div>
               </div>
+              {error.includes('unauthorized-domain') && (
+                <div className="mt-2 p-2 bg-white/50 rounded border border-red-100 text-[10px] text-red-500 italic">
+                  Note: Ce domaine n'est pas autorisé dans Firebase. Ajoutez-le dans Authentication &rarr; Settings &rarr; Authorized Domains.
+                </div>
+              )}
             </div>
           ) : null}
 

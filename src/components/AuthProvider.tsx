@@ -48,11 +48,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             if (userData.approved || firebaseUser.email === 'miasaatrany@gmail.com') {
               setUser(userData);
             } else {
-              // If not approved, sign out
-              signOut(auth);
+              // If not approved, we don't set the user but we don't sign out here
+              // to avoid race conditions during registration/login
               setUser(null);
             }
           } else {
+            // Document doesn't exist yet (might be in progress of creation)
             setUser(null);
           }
           setLoading(false);
@@ -212,11 +213,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setUser(newUser);
       return { user: newUser };
     } catch (error: any) {
+      console.error('Registration Auth Error:', error);
       if (error.code === 'auth/email-already-in-use') {
         throw new Error('Cet email est déjà utilisé par un autre compte.');
       }
       if (error.code === 'auth/weak-password') {
         throw new Error('Le mot de passe est trop faible (6 caractères minimum).');
+      }
+      if (error.code === 'auth/operation-not-allowed') {
+        throw new Error('La méthode d\'inscription par email n\'est pas activée. Veuillez utiliser Google ou contacter l\'administrateur.');
       }
       if (error.code === 'auth/network-request-failed') {
         throw new Error('Erreur de réseau. Veuillez vérifier votre connexion.');

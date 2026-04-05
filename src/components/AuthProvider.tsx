@@ -42,6 +42,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         const profileRef = doc(db, 'users', firebaseUser.uid);
         
         unsubscribeProfile = onSnapshot(profileRef, (docSnap) => {
+          console.log('Auth Profile Update:', docSnap.exists() ? docSnap.data() : 'No profile');
           if (docSnap.exists()) {
             const userData = docSnap.data() as UserProfile;
             // Hardcoded admin is always approved

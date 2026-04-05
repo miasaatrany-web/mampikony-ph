@@ -13,6 +13,7 @@ const Dashboard: React.FC = () => {
   const { user, isAdmin, isAgent, logout } = useAuth();
   const navigate = useNavigate();
   const [products, setProducts] = useState<Product[]>([]);
+  const [allSales, setAllSales] = useState<Sale[]>([]);
   const [recentSales, setRecentSales] = useState<Sale[]>([]);
   const [pendingUsersCount, setPendingUsersCount] = useState(0);
   const [loading, setLoading] = useState(true);
@@ -33,6 +34,7 @@ const Dashboard: React.FC = () => {
     // Listen to sales
     const salesUnsubscribe = onSnapshot(query(collection(db, 'sales')), (snapshot) => {
       const salesData = snapshot.docs.map(doc => doc.data() as Sale);
+      setAllSales(salesData);
       setRecentSales(salesData.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()).slice(0, 5));
     }, (error) => {
       handleFirestoreError(error, OperationType.LIST, 'sales');
@@ -59,7 +61,7 @@ const Dashboard: React.FC = () => {
 
   const lowStockProducts = products.filter(p => p.quantity <= (p.lowStockThreshold || 5));
   const expiredProducts = products.filter(p => new Date(p.expirationDate) < new Date());
-  const totalSalesToday = recentSales
+  const totalSalesToday = allSales
     .filter(s => format(new Date(s.createdAt), 'yyyy-MM-dd') === format(new Date(), 'yyyy-MM-dd'))
     .reduce((acc, s) => acc + s.total, 0);
 

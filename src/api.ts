@@ -142,6 +142,21 @@ export const api = {
       const sale = { ...data, id, createdAt: new Date().toISOString() } as Sale;
       try {
         await setDoc(doc(db, path), sale);
+        
+        // Decrement stock for each item
+        if (data.items) {
+          for (const item of data.items) {
+            const productRef = doc(db, `products/${item.productId}`);
+            const productSnap = await getDoc(productRef);
+            if (productSnap.exists()) {
+              const currentQty = productSnap.data().quantity || 0;
+              await updateDoc(productRef, {
+                quantity: Math.max(0, currentQty - item.quantity)
+              });
+            }
+          }
+        }
+        
         return sale;
       } catch (error) {
         handleFirestoreError(error, OperationType.CREATE, path);

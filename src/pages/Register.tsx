@@ -19,8 +19,12 @@ const Register: React.FC = () => {
       setError('');
       setLoading(true);
       try {
-        await loginWithGoogle();
-        navigate('/');
+        const res: any = await loginWithGoogle();
+        if (res?.pendingApproval) {
+          setSuccess(res.message);
+        } else {
+          navigate('/');
+        }
       } catch (err: any) {
         setError(err.message || 'Erreur lors de la connexion avec Google.');
         console.error(err);
@@ -108,12 +112,50 @@ const Register: React.FC = () => {
                 </p>
               </div>
             </div>
-          ) : error && (
-            <div className="bg-red-50 border-l-4 border-red-500 p-4 mb-6 flex items-start gap-3 rounded-r-lg">
-              <AlertCircle className="text-red-500 shrink-0" size={20} />
-              <p className="text-sm text-red-700">{error}</p>
+          ) : error ? (
+            <div className="bg-red-50 border-l-4 border-red-500 p-4 mb-6 flex flex-col gap-2 rounded-r-lg shadow-sm">
+              <div className="flex items-start gap-3">
+                <AlertCircle className="text-red-500 shrink-0 mt-0.5" size={20} />
+                <div className="flex-1">
+                  <p className="text-sm text-red-700 font-bold">Erreur d'inscription</p>
+                  <p className="text-xs text-red-600 mt-1">
+                    {error.startsWith('{') ? (
+                      (() => {
+                        try {
+                          const errObj = JSON.parse(error);
+                          return `Erreur Firestore (${errObj.operationType}) sur ${errObj.path}: ${errObj.error}`;
+                        } catch {
+                          return error;
+                        }
+                      })()
+                    ) : error}
+                  </p>
+                </div>
+              </div>
+              {error.includes('déjà utilisé') && (
+                <div className="mt-3 pt-3 border-t border-red-100 flex flex-wrap gap-2">
+                  <Link 
+                    to="/login" 
+                    className="inline-flex items-center gap-2 text-xs font-bold text-red-700 hover:text-red-800 bg-white px-3 py-2 rounded-lg border border-red-200 transition-colors shadow-sm"
+                  >
+                    Se connecter
+                    <ArrowRight size={14} />
+                  </Link>
+                  <Link 
+                    to="/forgot-password" 
+                    className="inline-flex items-center gap-2 text-xs font-bold text-slate-600 hover:text-slate-800 bg-white px-3 py-2 rounded-lg border border-slate-200 transition-colors shadow-sm"
+                  >
+                    Mot de passe oublié ?
+                  </Link>
+                </div>
+              )}
+              {error.includes('insufficient permissions') && (
+                <div className="mt-2 p-2 bg-white/50 rounded border border-red-100 text-[10px] text-red-500 italic">
+                  Note: Cela peut être dû à une validation de données échouée dans les règles de sécurité.
+                </div>
+              )}
             </div>
-          )}
+          ) : null}
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>

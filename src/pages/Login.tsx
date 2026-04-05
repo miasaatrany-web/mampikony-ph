@@ -19,8 +19,12 @@ const Login: React.FC = () => {
       setError('');
       setLoading(true);
       try {
-        await loginWithGoogle();
-        navigate(from, { replace: true });
+        const res: any = await loginWithGoogle();
+        if (res?.pendingApproval) {
+          setError(res.message);
+        } else {
+          navigate(from, { replace: true });
+        }
       } catch (err: any) {
         setError(err.message || 'Erreur lors de la connexion avec Google.');
         console.error(err);
@@ -57,12 +61,28 @@ const Login: React.FC = () => {
         </div>
 
         <div className="p-8">
-          {error && (
-            <div className="bg-red-50 border-l-4 border-red-500 p-4 mb-6 flex items-start gap-3 rounded-r-lg">
-              <AlertCircle className="text-red-500 shrink-0" size={20} />
-              <p className="text-sm text-red-700">{error}</p>
+          {error ? (
+            <div className="bg-red-50 border-l-4 border-red-500 p-4 mb-6 flex flex-col gap-2 rounded-r-lg shadow-sm">
+              <div className="flex items-start gap-3">
+                <AlertCircle className="text-red-500 shrink-0 mt-0.5" size={20} />
+                <div className="flex-1">
+                  <p className="text-sm text-red-700 font-bold">Erreur de connexion</p>
+                  <p className="text-xs text-red-600 mt-1">
+                    {error.startsWith('{') ? (
+                      (() => {
+                        try {
+                          const errObj = JSON.parse(error);
+                          return `Erreur Firestore (${errObj.operationType}) sur ${errObj.path}: ${errObj.error}`;
+                        } catch {
+                          return error;
+                        }
+                      })()
+                    ) : error}
+                  </p>
+                </div>
+              </div>
             </div>
-          )}
+          ) : null}
 
           <form onSubmit={handleSubmit} className="space-y-5">
             <div>

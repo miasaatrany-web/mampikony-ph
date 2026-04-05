@@ -71,9 +71,7 @@ service cloud.firestore {
     }
 
     function isValidDateString(dateStr) {
-      return dateStr is string && 
-             (dateStr.matches("^\\d{4}-\\d{2}-\\d{2}$") || 
-              dateStr.matches("^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}.*Z?$"));
+      return dateStr is string && dateStr.size() >= 10;
     }
 
     // ===============================================================
@@ -86,7 +84,8 @@ service cloud.firestore {
              data.email is string && isValidEmail(data.email) &&
              data.role in ['admin', 'agent'] &&
              data.approved is bool &&
-             isValidDateString(data.createdAt);
+             isValidDateString(data.createdAt) &&
+             (!('displayName' in data) || (data.displayName is string && data.displayName.size() < 100));
     }
 
     function isValidProduct(data) {

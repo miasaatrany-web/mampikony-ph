@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { UserProfile } from '../types';
-import { auth, db, onAuthStateChanged, signOut, doc, getDoc, setDoc, signInWithPopup, googleProvider, onSnapshot } from '../firebase';
+import { auth, db, onAuthStateChanged, signOut, doc, getDoc, setDoc, signInWithPopup, googleProvider, onSnapshot, handleFirestoreError, OperationType } from '../firebase';
 import { createUserWithEmailAndPassword, signInWithEmailAndPassword } from 'firebase/auth';
 
 interface AuthContextType {
@@ -9,7 +9,7 @@ interface AuthContextType {
   isAdmin: boolean;
   isAgent: boolean;
   login: (data: any) => Promise<void>;
-  loginWithGoogle: () => Promise<void>;
+  loginWithGoogle: () => Promise<any>;
   register: (data: any) => Promise<any>;
   logout: () => void;
 }
@@ -98,7 +98,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           approved: false,
           createdAt: new Date().toISOString()
         };
-        await setDoc(doc(db, 'users', firebaseUser.uid), newUser);
+        try {
+          await setDoc(doc(db, 'users', firebaseUser.uid), newUser);
+        } catch (err) {
+          handleFirestoreError(err, OperationType.WRITE, `users/${firebaseUser.uid}`);
+        }
         await signOut(auth);
         throw new Error('Profil créé. Votre compte est en attente d\'approbation par un administrateur.');
       }
@@ -123,9 +127,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         const userData = userDoc.data() as UserProfile;
         if (!userData.approved && firebaseUser.email !== 'miasaatrany@gmail.com') {
           await signOut(auth);
-          throw new Error('Votre compte est en attente d\'approbation par un administrateur.');
+          return { 
+            pendingApproval: true, 
+            message: 'Votre compte est en attente d\'approbation par un administrateur.' 
+          };
         }
         setUser(userData);
+        return { user: userData };
       } else {
         // Create a new profile for Google user
         const role = firebaseUser.email === 'miasaatrany@gmail.com' ? 'admin' : 'agent';
@@ -140,13 +148,21 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           createdAt: new Date().toISOString()
         };
 
-        await setDoc(doc(db, 'users', firebaseUser.uid), newUser);
+        try {
+          await setDoc(doc(db, 'users', firebaseUser.uid), newUser);
+        } catch (err) {
+          handleFirestoreError(err, OperationType.WRITE, `users/${firebaseUser.uid}`);
+        }
         
         if (!approved) {
           await signOut(auth);
-          throw new Error('Compte créé avec succès ! Votre compte est en attente d\'approbation par un administrateur.');
+          return { 
+            pendingApproval: true, 
+            message: 'Compte créé avec succès ! Votre compte est en attente d\'approbation par un administrateur.' 
+          };
         }
         setUser(newUser);
+        return { user: newUser };
       }
     } catch (error: any) {
       console.error('Google Login Error:', error);
@@ -179,7 +195,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         createdAt: new Date().toISOString()
       };
 
-      await setDoc(doc(db, 'users', firebaseUser.uid), newUser);
+      try {
+        await setDoc(doc(db, 'users', firebaseUser.uid), newUser);
+      } catch (err) {
+        handleFirestoreError(err, OperationType.WRITE, `users/${firebaseUser.uid}`);
+      }
       
       if (!approved) {
         await signOut(auth);

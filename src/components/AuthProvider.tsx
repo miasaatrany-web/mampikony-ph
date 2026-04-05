@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { UserProfile } from '../types';
-import { api } from '../api';
+import { auth, db, onAuthStateChanged, signOut, doc, getDoc, setDoc } from '../firebase';
+import { createUserWithEmailAndPassword, signInWithEmailAndPassword } from 'firebase/auth';
 
 interface AuthContextType {
   user: UserProfile | null;
@@ -29,41 +30,84 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const checkAuth = async () => {
-      const token = localStorage.getItem('token');
-      if (token) {
+    const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
+      if (firebaseUser) {
         try {
-          const userData = await api.auth.me();
-          setUser(userData);
+          const userDoc = await getDoc(doc(db, 'users', firebaseUser.uid));
+          if (userDoc.exists()) {
+            const userData = userDoc.data() as UserProfile;
+            if (userData.approved) {
+              setUser(userData);
+            } else {
+              // User not approved, sign out
+              await signOut(auth);
+              setUser(null);
+            }
+          } else {
+            setUser(null);
+          }
         } catch (err) {
-          localStorage.removeItem('token');
+          console.error('Error fetching user profile:', err);
           setUser(null);
         }
+      } else {
+        setUser(null);
       }
       setLoading(false);
-    };
-    checkAuth();
+    });
+    return () => unsubscribe();
   }, []);
 
   const login = async (data: any) => {
-    const { user, token } = await api.auth.login(data);
-    localStorage.setItem('token', token);
-    setUser(user);
+    const { email, password } = data;
+    const userCredential = await signInWithEmailAndPassword(auth, email, password);
+    const firebaseUser = userCredential.user;
+    
+    const userDoc = await getDoc(doc(db, 'users', firebaseUser.uid));
+    if (userDoc.exists()) {
+      const userData = userDoc.data() as UserProfile;
+      if (!userData.approved) {
+        await signOut(auth);
+        throw new Error('Votre compte est en attente d\'approbation par un administrateur.');
+      }
+      setUser(userData);
+    } else {
+      await signOut(auth);
+      throw new Error('Profil utilisateur non trouvé.');
+    }
   };
 
   const register = async (data: any) => {
-    const res = await api.auth.register(data);
-    if (res.pendingApproval) {
-      return res;
+    const { email, password, displayName, role } = data;
+    const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+    const firebaseUser = userCredential.user;
+    
+    const approved = role === 'admin'; // Admins are auto-approved for now, or use the default admin email logic in rules
+    const newUser: UserProfile = {
+      uid: firebaseUser.uid,
+      email: firebaseUser.email!,
+      displayName,
+      role,
+      approved,
+      createdAt: new Date().toISOString()
+    };
+
+    await setDoc(doc(db, 'users', firebaseUser.uid), newUser);
+    
+    if (!approved) {
+      await signOut(auth);
+      return { 
+        pendingApproval: true, 
+        message: 'Compte créé avec succès ! Votre compte est en attente d\'approbation par un administrateur.' 
+      };
     }
-    const { user, token } = res;
-    localStorage.setItem('token', token);
-    setUser(user);
-    return res;
+
+    setUser(newUser);
+    return { user: newUser };
   };
 
-  const logout = () => {
-    localStorage.removeItem('token');
+  const logout = async () => {
+    await signOut(auth);
     setUser(null);
   };
 

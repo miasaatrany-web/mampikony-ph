@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { api } from '../api';
-import { Product, SaleItem } from '../types';
+import { Product, SaleItem, Sale } from '../types';
 import { useAuth } from '../components/AuthProvider';
 import { ShoppingCart, Search, Plus, Minus, Trash2, CheckCircle, User, Receipt, X, ArrowLeft, Calendar, PlusCircle, Send } from 'lucide-react';
 import { cn } from '../lib/utils';
@@ -85,12 +85,12 @@ const POS: React.FC = () => {
     setIsCheckingOut(true);
 
     try {
-      const saleData = {
+      const saleData: Partial<Sale> = {
         customerName,
         items: cart,
         total,
-        agentId: user?.uid,
-        agentName: user?.displayName,
+        agentId: user?.uid || '',
+        agentName: user?.displayName || '',
         status: 'pending'
       };
 

@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { api } from '../api';
 import { useAuth } from '../components/AuthProvider';
+import { UserProfile, Sale } from '../types';
+import { db, collection, query, onSnapshot, handleFirestoreError, OperationType } from '../firebase';
 import { Users, Search, ArrowLeft, User, DollarSign, ShoppingBag, Calendar, Check, X as XIcon, Trash2 } from 'lucide-react';
 import { Link, Navigate } from 'react-router-dom';
 import { format } from 'date-fns';
@@ -13,23 +15,52 @@ const Agents: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [actionLoading, setActionLoading] = useState<string | null>(null);
 
-  const fetchUsers = async () => {
-    try {
-      const data = await api.auth.list();
-      setUsers(data);
-    } catch (err) {
-      console.error(err);
-    } finally {
+  useEffect(() => {
+    if (!isAdmin) return;
+
+    setLoading(true);
+    
+    let usersData: UserProfile[] = [];
+    let salesData: Sale[] = [];
+
+    const updateUsersWithStats = () => {
+      const combined = usersData.map(user => {
+        const userSales = salesData.filter(s => s.agentId === user.uid);
+        return {
+          ...user,
+          salesCount: userSales.length,
+          totalSales: userSales.reduce((acc, s) => acc + s.total, 0)
+        };
+      });
+      setUsers(combined);
       setLoading(false);
-    }
-  };
+    };
+
+    const usersUnsubscribe = onSnapshot(query(collection(db, 'users')), (snapshot) => {
+      usersData = snapshot.docs.map(doc => doc.data() as UserProfile);
+      updateUsersWithStats();
+    }, (error) => {
+      handleFirestoreError(error, OperationType.LIST, 'users');
+    });
+
+    const salesUnsubscribe = onSnapshot(query(collection(db, 'sales')), (snapshot) => {
+      salesData = snapshot.docs.map(doc => doc.data() as Sale);
+      updateUsersWithStats();
+    }, (error) => {
+      handleFirestoreError(error, OperationType.LIST, 'sales');
+    });
+
+    return () => {
+      usersUnsubscribe();
+      salesUnsubscribe();
+    };
+  }, [isAdmin]);
 
   const handleApprove = async (id: string) => {
     if (window.confirm('Voulez-vous approuver ce compte agent ?')) {
       setActionLoading(id);
       try {
         await api.auth.approve(id);
-        await fetchUsers();
       } catch (err) {
         console.error(err);
         alert('Erreur lors de l\'approbation.');
@@ -44,7 +75,6 @@ const Agents: React.FC = () => {
       setActionLoading(id);
       try {
         await api.auth.delete(id);
-        await fetchUsers();
       } catch (err) {
         console.error(err);
         alert('Erreur lors de la suppression.');
@@ -53,12 +83,6 @@ const Agents: React.FC = () => {
       }
     }
   };
-
-  useEffect(() => {
-    if (isAdmin) {
-      fetchUsers();
-    }
-  }, [isAdmin]);
 
   if (!isAdmin) {
     return <Navigate to="/" />;

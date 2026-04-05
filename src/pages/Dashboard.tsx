@@ -2,7 +2,8 @@ import React, { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../components/AuthProvider';
 import { api } from '../api';
-import { Product, Sale } from '../types';
+import { Product, Sale, UserProfile } from '../types';
+import { db, collection, query, onSnapshot, handleFirestoreError, OperationType } from '../firebase';
 import { Package, ShoppingCart, AlertTriangle, TrendingUp, Clock, CheckCircle2, XCircle, ArrowRight, Plus, LogOut, PlusCircle, Users, ShieldAlert } from 'lucide-react';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
@@ -17,35 +18,43 @@ const Dashboard: React.FC = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const promises: Promise<any>[] = [
-          api.products.list(),
-          api.sales.list()
-        ];
+    setLoading(true);
+    
+    // Listen to products
+    const productsUnsubscribe = onSnapshot(query(collection(db, 'products')), (snapshot) => {
+      const productsData = snapshot.docs.map(doc => doc.data() as Product);
+      setProducts(productsData);
+      setLoading(false);
+    }, (error) => {
+      handleFirestoreError(error, OperationType.LIST, 'products');
+      setLoading(false);
+    });
 
-        if (isAdmin) {
-          promises.push(api.auth.list());
-        }
+    // Listen to sales
+    const salesUnsubscribe = onSnapshot(query(collection(db, 'sales')), (snapshot) => {
+      const salesData = snapshot.docs.map(doc => doc.data() as Sale);
+      setRecentSales(salesData.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()).slice(0, 5));
+    }, (error) => {
+      handleFirestoreError(error, OperationType.LIST, 'sales');
+    });
 
-        const results = await Promise.all(promises);
-        const productsData = results[0];
-        const salesData = results[1];
-        
-        setProducts(productsData);
-        setRecentSales(salesData.sort((a: Sale, b: Sale) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()).slice(0, 5));
-        
-        if (isAdmin && results[2]) {
-          const pending = results[2].filter((u: any) => !u.approved).length;
-          setPendingUsersCount(pending);
-        }
-      } catch (err) {
-        console.error(err);
-      } finally {
-        setLoading(false);
-      }
+    // Listen to users if admin
+    let usersUnsubscribe = () => {};
+    if (isAdmin) {
+      usersUnsubscribe = onSnapshot(query(collection(db, 'users')), (snapshot) => {
+        const usersData = snapshot.docs.map(doc => doc.data() as UserProfile);
+        const pending = usersData.filter(u => !u.approved).length;
+        setPendingUsersCount(pending);
+      }, (error) => {
+        handleFirestoreError(error, OperationType.LIST, 'users');
+      });
+    }
+
+    return () => {
+      productsUnsubscribe();
+      salesUnsubscribe();
+      usersUnsubscribe();
     };
-    fetchData();
   }, [isAdmin]);
 
   const lowStockProducts = products.filter(p => p.quantity <= (p.lowStockThreshold || 5));

@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { api } from '../api';
 import { Product } from '../types';
 import { useAuth } from '../components/AuthProvider';
+import { db, collection, query, onSnapshot, handleFirestoreError, OperationType } from '../firebase';
 import { Package, Plus, Search, Edit2, Trash2, X, AlertCircle, Calendar, DollarSign, Layers, ArrowLeft, PlusCircle } from 'lucide-react';
 import { cn } from '../lib/utils';
 import { format } from 'date-fns';
@@ -26,27 +27,29 @@ const Stock: React.FC = () => {
     lowStockThreshold: '5'
   });
 
-  const fetchProducts = async () => {
-    try {
-      const data = await api.products.list();
-      setProducts(data);
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setLoading(false);
-    }
-  };
-
   useEffect(() => {
-    fetchProducts();
+    setLoading(true);
+    const path = 'products';
+    const q = query(collection(db, path));
     
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      const productsData = snapshot.docs.map(doc => doc.data() as Product);
+      setProducts(productsData);
+      setLoading(false);
+    }, (error) => {
+      handleFirestoreError(error, OperationType.LIST, path);
+      setLoading(false);
+    });
+
     // Check if we should open the modal from navigation state
     if (location.state && (location.state as any).openModal) {
       setIsModalOpen(true);
       // Clear state to prevent reopening on refresh
       window.history.replaceState({}, document.title);
     }
-  }, [location]);
+
+    return () => unsubscribe();
+  }, [location, isAdmin, isAgent]);
 
   const filteredProducts = products.filter(p =>
     p.name.toLowerCase().includes(searchTerm.toLowerCase())
@@ -91,7 +94,6 @@ const Stock: React.FC = () => {
       } else {
         await api.products.create(data);
       }
-      fetchProducts();
       setIsModalOpen(false);
     } catch (err) {
       console.error(err);
@@ -103,7 +105,6 @@ const Stock: React.FC = () => {
     if (window.confirm('Êtes-vous sûr de vouloir supprimer ce produit ?')) {
       try {
         await api.products.delete(id);
-        fetchProducts();
       } catch (err) {
         console.error(err);
         alert('Erreur lors de la suppression.');

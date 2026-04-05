@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { api } from '../api';
 import { Product, SaleItem, Sale } from '../types';
 import { useAuth } from '../components/AuthProvider';
+import { db, collection, query, onSnapshot, handleFirestoreError, OperationType } from '../firebase';
 import { ShoppingCart, Search, Plus, Minus, Trash2, CheckCircle, User, Receipt, X, ArrowLeft, Calendar, PlusCircle, Send } from 'lucide-react';
 import { cn } from '../lib/utils';
 import { format } from 'date-fns';
@@ -22,17 +23,18 @@ const POS: React.FC = () => {
 
   const [activeTab, setActiveTab] = useState<'products' | 'cart'>('products');
 
-  const fetchProducts = async () => {
-    try {
-      const data = await api.products.list();
-      setProducts(data);
-    } catch (err) {
-      console.error(err);
-    }
-  };
-
   useEffect(() => {
-    fetchProducts();
+    const path = 'products';
+    const q = query(collection(db, path));
+    
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      const productsData = snapshot.docs.map(doc => doc.data() as Product);
+      setProducts(productsData);
+    }, (error) => {
+      handleFirestoreError(error, OperationType.LIST, path);
+    });
+
+    return () => unsubscribe();
   }, []);
 
   const filteredProducts = products.filter(p =>
@@ -105,7 +107,6 @@ const POS: React.FC = () => {
 
       setCart([]);
       setCustomerName('');
-      await fetchProducts();
       setActiveTab('products');
     } catch (err) {
       console.error(err);

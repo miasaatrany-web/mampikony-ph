@@ -84,7 +84,31 @@ const Register: React.FC = () => {
         </div>
 
         <div className="p-8">
-          {error && (
+          {error && (error.includes('auth/operation-not-allowed') || error.includes('Email/Password')) ? (
+            <div className="mt-6 p-6 bg-amber-50 rounded-2xl border-2 border-amber-200 shadow-sm">
+              <div className="flex items-center gap-3 mb-3 text-amber-800">
+                <AlertCircle size={24} className="shrink-0" />
+                <h3 className="font-black text-lg">Action Requise dans Firebase</h3>
+              </div>
+              <p className="text-sm text-amber-900 leading-relaxed mb-4">
+                L'inscription par <strong>Email/Mot de passe</strong> est actuellement désactivée dans votre projet Firebase. 
+                Je ne peux pas l'activer à votre place.
+              </p>
+              <div className="space-y-3">
+                <p className="text-xs font-bold text-amber-800 uppercase tracking-wider">Comment corriger :</p>
+                <ol className="text-xs text-amber-900 list-decimal pl-4 space-y-2">
+                  <li>Allez dans la <a href="https://console.firebase.google.com/project/_/authentication/providers" target="_blank" rel="noopener noreferrer" className="underline font-black">Console Firebase → Authentication</a></li>
+                  <li>Cliquez sur <strong>"Ajouter un fournisseur"</strong></li>
+                  <li>Choisissez <strong>"Email/Password"</strong> et activez-le</li>
+                </ol>
+              </div>
+              <div className="mt-6 pt-4 border-t border-amber-200">
+                <p className="text-xs text-amber-700 italic">
+                  En attendant, vous pouvez utiliser <strong>Google</strong> pour créer votre compte.
+                </p>
+              </div>
+            </div>
+          ) : error && (
             <div className="bg-red-50 border-l-4 border-red-500 p-4 mb-6 flex items-start gap-3 rounded-r-lg">
               <AlertCircle className="text-red-500 shrink-0" size={20} />
               <p className="text-sm text-red-700">{error}</p>

@@ -113,7 +113,7 @@ const Agents: React.FC = () => {
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {pendingUsers.map((user) => (
-              <div key={user.id} className="bg-white p-8 rounded-[2.5rem] border-2 border-amber-100 shadow-xl shadow-amber-500/5 group relative overflow-hidden">
+              <div key={user.uid} className="bg-white p-8 rounded-[2.5rem] border-2 border-amber-100 shadow-xl shadow-amber-500/5 group relative overflow-hidden">
                 <div className="absolute top-0 right-0 p-4">
                   <span className="bg-amber-100 text-amber-700 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest">
                     En attente
@@ -130,11 +130,11 @@ const Agents: React.FC = () => {
                 </div>
                 <div className="flex flex-col gap-3">
                   <button
-                    onClick={() => handleApprove(user.id)}
-                    disabled={actionLoading === user.id}
+                    onClick={() => handleApprove(user.uid)}
+                    disabled={actionLoading === user.uid}
                     className="w-full bg-emerald-600 text-white font-black py-5 rounded-2xl hover:bg-emerald-500 transition-all shadow-xl shadow-emerald-600/20 active:scale-95 flex items-center justify-center gap-3 text-lg"
                   >
-                    {actionLoading === user.id ? (
+                    {actionLoading === user.uid ? (
                       <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-white"></div>
                     ) : (
                       <>
@@ -144,8 +144,8 @@ const Agents: React.FC = () => {
                     )}
                   </button>
                   <button
-                    onClick={() => handleDelete(user.id)}
-                    disabled={actionLoading === user.id}
+                    onClick={() => handleDelete(user.uid)}
+                    disabled={actionLoading === user.uid}
                     className="w-full bg-rose-50 text-rose-600 hover:bg-rose-600 hover:text-white font-black py-4 rounded-2xl transition-all active:scale-95 flex items-center justify-center gap-2 text-sm uppercase tracking-widest"
                   >
                     <XIcon size={18} />
@@ -183,11 +183,11 @@ const Agents: React.FC = () => {
             ))
           ) : approvedUsers.length > 0 ? (
             approvedUsers.map((user) => (
-              <div key={user.id} className="bg-white p-8 rounded-[2.5rem] border border-slate-100 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all group relative">
+              <div key={user.uid} className="bg-white p-8 rounded-[2.5rem] border border-slate-100 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all group relative">
                 {isAdmin && user.role !== 'admin' && (
                   <div className="absolute top-6 right-6 flex gap-2">
                     <button
-                      onClick={() => handleDelete(user.id)}
+                      onClick={() => handleDelete(user.uid)}
                       className="p-3 text-rose-600 bg-rose-50 hover:bg-rose-600 hover:text-white rounded-xl transition-all shadow-sm"
                       title="Supprimer l'agent"
                     >

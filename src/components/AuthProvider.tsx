@@ -30,6 +30,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [user, setUser] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
 
+  const isAdmin = user?.role === 'admin' || user?.email === 'miasaatrany@gmail.com';
+  const isAgent = user?.role === 'agent' || isAdmin;
+
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
       if (firebaseUser) {
@@ -37,10 +40,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           const userDoc = await getDoc(doc(db, 'users', firebaseUser.uid));
           if (userDoc.exists()) {
             const userData = userDoc.data() as UserProfile;
-            if (userData.approved) {
+            // Hardcoded admin is always approved
+            if (userData.approved || firebaseUser.email === 'miasaatrany@gmail.com') {
               setUser(userData);
             } else {
-              // User not approved, sign out
               await signOut(auth);
               setUser(null);
             }
@@ -67,7 +70,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const userDoc = await getDoc(doc(db, 'users', firebaseUser.uid));
     if (userDoc.exists()) {
       const userData = userDoc.data() as UserProfile;
-      if (!userData.approved) {
+      if (!userData.approved && firebaseUser.email !== 'miasaatrany@gmail.com') {
         await signOut(auth);
         throw new Error('Votre compte est en attente d\'approbation par un administrateur.');
       }
@@ -86,7 +89,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const userDoc = await getDoc(doc(db, 'users', firebaseUser.uid));
       if (userDoc.exists()) {
         const userData = userDoc.data() as UserProfile;
-        if (!userData.approved) {
+        if (!userData.approved && firebaseUser.email !== 'miasaatrany@gmail.com') {
           await signOut(auth);
           throw new Error('Votre compte est en attente d\'approbation par un administrateur.');
         }
@@ -94,7 +97,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       } else {
         // Create a new profile for Google user
         const role = firebaseUser.email === 'miasaatrany@gmail.com' ? 'admin' : 'agent';
-        const approved = role === 'admin';
+        const approved = firebaseUser.email === 'miasaatrany@gmail.com';
         
         const newUser: UserProfile = {
           uid: firebaseUser.uid,
@@ -133,7 +136,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const userCredential = await createUserWithEmailAndPassword(auth, email, password);
     const firebaseUser = userCredential.user;
     
-    const approved = role === 'admin'; // Admins are auto-approved for now, or use the default admin email logic in rules
+    const approved = firebaseUser.email === 'miasaatrany@gmail.com';
     const newUser: UserProfile = {
       uid: firebaseUser.uid,
       email: firebaseUser.email!,
@@ -161,9 +164,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     await signOut(auth);
     setUser(null);
   };
-
-  const isAdmin = user?.role === 'admin';
-  const isAgent = user?.role === 'agent' || isAdmin;
 
   return (
     <AuthContext.Provider value={{ user, loading, isAdmin, isAgent, login, loginWithGoogle, register, logout }}>

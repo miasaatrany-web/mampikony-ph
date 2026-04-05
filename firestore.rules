@@ -54,12 +54,16 @@ service cloud.firestore {
     
     function isAdmin() {
       return isAuthenticated() &&
-        (get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin' ||
-          request.auth.token.email == "miasaatrany@gmail.com");
+        (request.auth.token.email == "miasaatrany@gmail.com" || 
+         (exists(/databases/$(database)/documents/users/$(request.auth.uid)) && 
+          get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin'));
     }
     
     function isApproved() {
-      return isAuthenticated() && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.approved == true;
+      return isAuthenticated() && 
+             (request.auth.token.email == "miasaatrany@gmail.com" || 
+              (exists(/databases/$(database)/documents/users/$(request.auth.uid)) && 
+               get(/databases/$(database)/documents/users/$(request.auth.uid)).data.approved == true));
     }
 
     function isValidEmail(email) {
@@ -67,7 +71,9 @@ service cloud.firestore {
     }
 
     function isValidDateString(dateStr) {
-      return dateStr is string && dateStr.matches("^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}.*Z?$");
+      return dateStr is string && 
+             (dateStr.matches("^\\d{4}-\\d{2}-\\d{2}$") || 
+              dateStr.matches("^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}.*Z?$"));
     }
 
     // ===============================================================
@@ -112,9 +118,10 @@ service cloud.firestore {
       allow read: if isOwner(userId) || isAdmin();
       
       // Allow create if authenticated and valid data
-      // New users are not approved by default unless they are the first admin
+      // New users are not approved by default unless they are the hardcoded admin
       allow create: if isAuthenticated() && isValidUser(request.resource.data) && 
-                    (isOwner(userId) || isAdmin());
+                    isOwner(userId) && 
+                    (request.resource.data.approved == false || request.auth.token.email == "miasaatrany@gmail.com");
       
       // Allow update if admin or owner (but owner cannot change role or approved status)
       allow update: if isAuthenticated() && isValidUser(request.resource.data) && 

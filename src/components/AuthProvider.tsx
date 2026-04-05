@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { UserProfile } from '../types';
-import { auth, db, onAuthStateChanged, signOut, doc, getDoc, setDoc } from '../firebase';
+import { auth, db, onAuthStateChanged, signOut, doc, getDoc, setDoc, signInWithPopup, googleProvider } from '../firebase';
 import { createUserWithEmailAndPassword, signInWithEmailAndPassword } from 'firebase/auth';
 
 interface AuthContextType {
@@ -9,6 +9,7 @@ interface AuthContextType {
   isAdmin: boolean;
   isAgent: boolean;
   login: (data: any) => Promise<void>;
+  loginWithGoogle: () => Promise<void>;
   register: (data: any) => Promise<any>;
   logout: () => void;
 }
@@ -77,6 +78,42 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
+  const loginWithGoogle = async () => {
+    const userCredential = await signInWithPopup(auth, googleProvider);
+    const firebaseUser = userCredential.user;
+    
+    const userDoc = await getDoc(doc(db, 'users', firebaseUser.uid));
+    if (userDoc.exists()) {
+      const userData = userDoc.data() as UserProfile;
+      if (!userData.approved) {
+        await signOut(auth);
+        throw new Error('Votre compte est en attente d\'approbation par un administrateur.');
+      }
+      setUser(userData);
+    } else {
+      // Create a new profile for Google user
+      const role = firebaseUser.email === 'miasaatrany@gmail.com' ? 'admin' : 'agent';
+      const approved = role === 'admin';
+      
+      const newUser: UserProfile = {
+        uid: firebaseUser.uid,
+        email: firebaseUser.email!,
+        displayName: firebaseUser.displayName || '',
+        role: role as any,
+        approved,
+        createdAt: new Date().toISOString()
+      };
+
+      await setDoc(doc(db, 'users', firebaseUser.uid), newUser);
+      
+      if (!approved) {
+        await signOut(auth);
+        throw new Error('Compte créé avec succès ! Votre compte est en attente d\'approbation par un administrateur.');
+      }
+      setUser(newUser);
+    }
+  };
+
   const register = async (data: any) => {
     const { email, password, displayName, role } = data;
     const userCredential = await createUserWithEmailAndPassword(auth, email, password);
@@ -115,7 +152,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const isAgent = user?.role === 'agent' || isAdmin;
 
   return (
-    <AuthContext.Provider value={{ user, loading, isAdmin, isAgent, login, register, logout }}>
+    <AuthContext.Provider value={{ user, loading, isAdmin, isAgent, login, loginWithGoogle, register, logout }}>
       {children}
     </AuthContext.Provider>
   );

@@ -3,6 +3,9 @@ import { Link } from 'react-router-dom';
 import { Package, Mail, AlertCircle, ArrowLeft, CheckCircle2 } from 'lucide-react';
 import { cn } from '../lib/utils';
 
+import { auth } from '../firebase';
+import { sendPasswordResetEmail } from 'firebase/auth';
+
 const ForgotPassword: React.FC = () => {
   const [email, setEmail] = useState('');
   const [error, setError] = useState('');
@@ -15,11 +18,15 @@ const ForgotPassword: React.FC = () => {
     setSuccess(false);
     setLoading(true);
 
-    // Mock password reset
-    setTimeout(() => {
+    try {
+      await sendPasswordResetEmail(auth, email);
       setSuccess(true);
+    } catch (err: any) {
+      console.error('Password reset error:', err);
+      setError(err.message || 'Une erreur est survenue lors de l\'envoi de l\'email.');
+    } finally {
       setLoading(false);
-    }, 1000);
+    }
   };
 
   return (
@@ -102,6 +109,24 @@ const ForgotPassword: React.FC = () => {
                 </Link>
               </div>
             </form>
+          )}
+
+          {error && error.includes('auth/operation-not-allowed') && (
+            <div className="mt-6 p-4 bg-blue-50 rounded-xl border border-blue-100">
+              <p className="text-xs text-blue-800 leading-relaxed">
+                <strong>Note :</strong> La réinitialisation par email n'est pas encore activée dans votre console Firebase. 
+                Activez "Email/Password" dans :
+                <br />
+                <a 
+                  href={`https://console.firebase.google.com/project/gen-lang-client-0227827330/authentication/providers`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="underline font-bold"
+                >
+                  Console Firebase → Authentication
+                </a>
+              </p>
+            </div>
           )}
         </div>
       </div>

@@ -13,7 +13,21 @@ const Register: React.FC = () => {
   const [success, setSuccess] = useState('');
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
-  const { register } = useAuth();
+  const { register, loginWithGoogle } = useAuth();
+  
+    const handleGoogleLogin = async () => {
+      setError('');
+      setLoading(true);
+      try {
+        await loginWithGoogle();
+        navigate('/');
+      } catch (err: any) {
+        setError(err.message || 'Erreur lors de la connexion avec Google.');
+        console.error(err);
+      } finally {
+        setLoading(false);
+      }
+    };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -174,7 +188,44 @@ const Register: React.FC = () => {
                 </>
               )}
             </button>
+
+            <div className="relative my-6">
+              <div className="absolute inset-0 flex items-center">
+                <div className="w-full border-t border-gray-200"></div>
+              </div>
+              <div className="relative flex justify-center text-sm">
+                <span className="px-2 bg-white text-gray-500 uppercase tracking-wider">Ou continuer avec</span>
+              </div>
+            </div>
+
+            <button
+              type="button"
+              onClick={handleGoogleLogin}
+              disabled={loading}
+              className="w-full bg-white border border-gray-200 text-gray-700 font-medium py-3 px-4 rounded-xl flex items-center justify-center gap-3 hover:bg-gray-50 transition-all shadow-sm"
+            >
+              <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google" className="w-5 h-5" />
+              S'inscrire avec Google
+            </button>
           </form>
+
+          {error && error.includes('auth/operation-not-allowed') && (
+            <div className="mt-6 p-4 bg-blue-50 rounded-xl border border-blue-100">
+              <p className="text-xs text-blue-800 leading-relaxed">
+                <strong>Note :</strong> La connexion par email/mot de passe n'est pas encore activée dans votre console Firebase. 
+                Utilisez <strong>Google</strong> pour vous inscrire ou activez "Email/Password" dans :
+                <br />
+                <a 
+                  href={`https://console.firebase.google.com/project/gen-lang-client-0227827330/authentication/providers`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="underline font-bold"
+                >
+                  Console Firebase → Authentication
+                </a>
+              </p>
+            </div>
+          )}
 
           <div className="mt-8 pt-6 border-t border-gray-100 text-center">
             <p className="text-gray-600 text-sm">

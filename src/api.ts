@@ -1,4 +1,4 @@
-import { UserProfile, Product, Sale } from './types';
+import { UserProfile, Product, Sale, UserRole } from './types';
 import { 
   db, 
   auth, 
@@ -71,6 +71,14 @@ export const api = {
         await deleteDoc(doc(db, path));
       } catch (error) {
         handleFirestoreError(error, OperationType.DELETE, path);
+      }
+    },
+    updateRole: async (id: string, role: UserRole) => {
+      const path = `users/${id}`;
+      try {
+        await updateDoc(doc(db, path), { role });
+      } catch (error) {
+        handleFirestoreError(error, OperationType.UPDATE, path);
       }
     },
   },

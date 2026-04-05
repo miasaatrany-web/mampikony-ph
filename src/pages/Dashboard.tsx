@@ -260,10 +260,10 @@ const Dashboard: React.FC = () => {
                                   }
                                 }
                               }}
-                              className="p-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-500 transition-all shadow-sm active:scale-90"
-                              title="Valider le paiement"
+                              className="px-3 py-1.5 bg-emerald-600 text-white rounded-lg hover:bg-emerald-500 transition-all shadow-sm active:scale-90 flex items-center gap-2 text-[10px] font-black uppercase tracking-widest"
                             >
-                              <CheckCircle2 size={16} />
+                              <CheckCircle2 size={14} />
+                              Valider
                             </button>
                           )}
                         </div>

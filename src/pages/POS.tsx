@@ -233,9 +233,10 @@ const POS: React.FC = () => {
                     ) : (
                       <button
                         onClick={() => addToCart(product)}
-                        className="w-9 h-9 rounded-lg bg-slate-50 flex items-center justify-center text-slate-300 hover:bg-brand-600 hover:text-white transition-all shadow-sm active:scale-90"
+                        className="w-10 h-10 rounded-xl bg-brand-50 flex items-center justify-center text-brand-600 hover:bg-brand-600 hover:text-white transition-all shadow-sm active:scale-90 border border-brand-100"
+                        title="Ajouter au panier"
                       >
-                        <Plus size={18} />
+                        <Plus size={20} />
                       </button>
                     )}
                   </div>

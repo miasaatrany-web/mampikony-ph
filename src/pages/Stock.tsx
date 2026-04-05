@@ -238,19 +238,19 @@ const Stock: React.FC = () => {
                           {isAgent && (
                             <button
                               onClick={() => handleOpenModal(product)}
-                              className="w-12 h-12 flex items-center justify-center bg-brand-50 text-brand-600 hover:bg-brand-600 hover:text-white rounded-2xl transition-all shadow-sm active:scale-95 border border-brand-100"
-                              title="Modifier"
+                              className="px-4 py-2 flex items-center gap-2 bg-brand-50 text-brand-600 hover:bg-brand-600 hover:text-white rounded-xl transition-all shadow-sm active:scale-95 border border-brand-100 text-xs font-black uppercase tracking-widest"
                             >
-                              <Edit2 size={20} />
+                              <Edit2 size={16} />
+                              Modifier
                             </button>
                           )}
                           {isAdmin && (
                             <button
                               onClick={() => handleDelete(product.id)}
-                              className="w-12 h-12 flex items-center justify-center bg-rose-50 text-rose-600 hover:bg-rose-600 hover:text-white rounded-2xl transition-all shadow-sm active:scale-95 border border-rose-100"
-                              title="Supprimer"
+                              className="px-4 py-2 flex items-center gap-2 bg-rose-50 text-rose-600 hover:bg-rose-600 hover:text-white rounded-xl transition-all shadow-sm active:scale-95 border border-rose-100 text-xs font-black uppercase tracking-widest"
                             >
-                              <Trash2 size={20} />
+                              <Trash2 size={16} />
+                              Supprimer
                             </button>
                           )}
                         </div>

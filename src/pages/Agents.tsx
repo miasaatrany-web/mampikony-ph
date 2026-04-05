@@ -1,15 +1,15 @@
 import React, { useEffect, useState } from 'react';
 import { api } from '../api';
 import { useAuth } from '../components/AuthProvider';
-import { UserProfile, Sale } from '../types';
+import { UserProfile, Sale, UserRole } from '../types';
 import { db, collection, query, onSnapshot, handleFirestoreError, OperationType } from '../firebase';
-import { Users, Search, ArrowLeft, User, DollarSign, ShoppingBag, Calendar, Check, X as XIcon, Trash2 } from 'lucide-react';
+import { Users, Search, ArrowLeft, User, DollarSign, ShoppingBag, Calendar, Check, X as XIcon, Trash2, Shield, ShieldAlert } from 'lucide-react';
 import { Link, Navigate } from 'react-router-dom';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 
 const Agents: React.FC = () => {
-  const { isAdmin } = useAuth();
+  const { user: currentUser, isAdmin } = useAuth();
   const [users, setUsers] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
@@ -70,7 +70,30 @@ const Agents: React.FC = () => {
     }
   };
 
-  const handleDelete = async (id: string) => {
+  const handleUpdateRole = async (id: string, role: UserRole) => {
+    const action = role === 'admin' ? 'promouvoir en administrateur' : 'rétrograder en agent';
+    if (window.confirm(`Voulez-vous ${action} ce compte ?`)) {
+      setActionLoading(id);
+      try {
+        await api.auth.updateRole(id, role);
+      } catch (err) {
+        console.error(err);
+        alert('Erreur lors de la mise à jour du rôle.');
+      } finally {
+        setActionLoading(null);
+      }
+    }
+  };
+
+  const handleDelete = async (id: string, email: string) => {
+    if (email === 'miasaatrany@gmail.com') {
+      alert('Le compte administrateur principal ne peut pas être supprimé.');
+      return;
+    }
+    if (id === currentUser?.uid) {
+      alert('Vous ne pouvez pas supprimer votre propre compte.');
+      return;
+    }
     if (window.confirm('Voulez-vous supprimer ce compte ? Cette action est irréversible.')) {
       setActionLoading(id);
       try {
@@ -168,7 +191,7 @@ const Agents: React.FC = () => {
                     )}
                   </button>
                   <button
-                    onClick={() => handleDelete(user.uid)}
+                    onClick={() => handleDelete(user.uid, user.email)}
                     disabled={actionLoading === user.uid}
                     className="w-full bg-rose-50 text-rose-600 hover:bg-rose-600 hover:text-white font-black py-4 rounded-2xl transition-all active:scale-95 flex items-center justify-center gap-2 text-sm uppercase tracking-widest"
                   >
@@ -208,14 +231,34 @@ const Agents: React.FC = () => {
           ) : approvedUsers.length > 0 ? (
             approvedUsers.map((user) => (
               <div key={user.uid} className="bg-white p-8 rounded-[2.5rem] border border-slate-100 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all group relative">
-                {isAdmin && user.role !== 'admin' && (
-                  <div className="absolute top-6 right-6 flex gap-2">
+                {isAdmin && user.email !== 'miasaatrany@gmail.com' && user.uid !== currentUser?.uid && (
+                  <div className="absolute top-6 right-6 flex flex-col gap-2">
+                    {user.role === 'agent' ? (
+                      <button
+                        onClick={() => handleUpdateRole(user.uid, 'admin')}
+                        disabled={actionLoading === user.uid}
+                        className="px-4 py-2 text-brand-600 bg-brand-50 hover:bg-brand-600 hover:text-white rounded-xl transition-all shadow-sm flex items-center gap-2 text-xs font-black uppercase tracking-widest border border-brand-100"
+                      >
+                        <Shield size={16} />
+                        Promouvoir Admin
+                      </button>
+                    ) : (
+                      <button
+                        onClick={() => handleUpdateRole(user.uid, 'agent')}
+                        disabled={actionLoading === user.uid}
+                        className="px-4 py-2 text-amber-600 bg-amber-50 hover:bg-amber-600 hover:text-white rounded-xl transition-all shadow-sm flex items-center gap-2 text-xs font-black uppercase tracking-widest border border-amber-100"
+                      >
+                        <ShieldAlert size={16} />
+                        Rétrograder Agent
+                      </button>
+                    )}
                     <button
-                      onClick={() => handleDelete(user.uid)}
-                      className="p-3 text-rose-600 bg-rose-50 hover:bg-rose-600 hover:text-white rounded-xl transition-all shadow-sm"
-                      title="Supprimer l'agent"
+                      onClick={() => handleDelete(user.uid, user.email)}
+                      disabled={actionLoading === user.uid}
+                      className="px-4 py-2 text-rose-600 bg-rose-50 hover:bg-rose-600 hover:text-white rounded-xl transition-all shadow-sm flex items-center gap-2 text-xs font-black uppercase tracking-widest border border-rose-100"
                     >
-                      <Trash2 size={20} />
+                      <Trash2 size={16} />
+                      Supprimer
                     </button>
                   </div>
                 )}

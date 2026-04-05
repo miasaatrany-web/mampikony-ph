@@ -225,11 +225,10 @@ const History: React.FC = () => {
                       <div className="flex items-center justify-end gap-2">
                         <button
                           onClick={() => setSelectedSale(sale)}
-                          className="p-2 text-slate-400 hover:text-brand-600 hover:bg-brand-50 rounded-xl transition-all flex items-center gap-2"
-                          title="Détails"
+                          className="px-3 py-2 text-slate-500 hover:text-brand-600 hover:bg-brand-50 rounded-xl transition-all flex items-center gap-2 border border-transparent hover:border-brand-100"
                         >
-                          <FileText size={20} />
-                          <span className="text-[10px] font-bold lg:hidden">Détails</span>
+                          <FileText size={18} />
+                          <span className="text-[10px] font-black uppercase tracking-widest">Détails</span>
                         </button>
                         {isAgent && !isAdmin && sale.status === 'pending' && (
                           <button

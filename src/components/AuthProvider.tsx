@@ -79,38 +79,52 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const loginWithGoogle = async () => {
-    const userCredential = await signInWithPopup(auth, googleProvider);
-    const firebaseUser = userCredential.user;
-    
-    const userDoc = await getDoc(doc(db, 'users', firebaseUser.uid));
-    if (userDoc.exists()) {
-      const userData = userDoc.data() as UserProfile;
-      if (!userData.approved) {
-        await signOut(auth);
-        throw new Error('Votre compte est en attente d\'approbation par un administrateur.');
-      }
-      setUser(userData);
-    } else {
-      // Create a new profile for Google user
-      const role = firebaseUser.email === 'miasaatrany@gmail.com' ? 'admin' : 'agent';
-      const approved = role === 'admin';
+    try {
+      const userCredential = await signInWithPopup(auth, googleProvider);
+      const firebaseUser = userCredential.user;
       
-      const newUser: UserProfile = {
-        uid: firebaseUser.uid,
-        email: firebaseUser.email!,
-        displayName: firebaseUser.displayName || '',
-        role: role as any,
-        approved,
-        createdAt: new Date().toISOString()
-      };
+      const userDoc = await getDoc(doc(db, 'users', firebaseUser.uid));
+      if (userDoc.exists()) {
+        const userData = userDoc.data() as UserProfile;
+        if (!userData.approved) {
+          await signOut(auth);
+          throw new Error('Votre compte est en attente d\'approbation par un administrateur.');
+        }
+        setUser(userData);
+      } else {
+        // Create a new profile for Google user
+        const role = firebaseUser.email === 'miasaatrany@gmail.com' ? 'admin' : 'agent';
+        const approved = role === 'admin';
+        
+        const newUser: UserProfile = {
+          uid: firebaseUser.uid,
+          email: firebaseUser.email!,
+          displayName: firebaseUser.displayName || '',
+          role: role as any,
+          approved,
+          createdAt: new Date().toISOString()
+        };
 
-      await setDoc(doc(db, 'users', firebaseUser.uid), newUser);
-      
-      if (!approved) {
-        await signOut(auth);
-        throw new Error('Compte créé avec succès ! Votre compte est en attente d\'approbation par un administrateur.');
+        await setDoc(doc(db, 'users', firebaseUser.uid), newUser);
+        
+        if (!approved) {
+          await signOut(auth);
+          throw new Error('Compte créé avec succès ! Votre compte est en attente d\'approbation par un administrateur.');
+        }
+        setUser(newUser);
       }
-      setUser(newUser);
+    } catch (error: any) {
+      console.error('Google Login Error:', error);
+      if (error.code === 'auth/popup-blocked') {
+        throw new Error("Le popup de connexion a été bloqué. Veuillez autoriser les popups pour ce site.");
+      }
+      if (error.code === 'auth/unauthorized-domain') {
+        throw new Error("Ce domaine n'est pas autorisé dans votre console Firebase (Authentication -> Settings -> Authorized Domains).");
+      }
+      if (error.code === 'auth/operation-not-allowed') {
+        throw new Error("La méthode de connexion (Google ou Email) n'est pas activée dans votre console Firebase.");
+      }
+      throw error;
     }
   };
 

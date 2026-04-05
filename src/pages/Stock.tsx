@@ -126,7 +126,7 @@ const Stock: React.FC = () => {
         <div className="flex flex-wrap items-center gap-4">
           <Link 
             to="/pos" 
-            className="bg-slate-900 text-white font-black py-5 px-8 rounded-[2rem] flex items-center gap-4 hover:bg-slate-800 transition-all shadow-2xl shadow-slate-900/40 active:scale-95 text-xl group"
+            className="btn-secondary !bg-slate-900 !text-white !border-none"
           >
             <div className="bg-white/20 p-2 rounded-xl group-hover:scale-110 transition-transform">
               <PlusCircle size={28} />
@@ -136,7 +136,7 @@ const Stock: React.FC = () => {
           {isAgent && (
             <button
               onClick={() => handleOpenModal()}
-              className="bg-brand-600 text-white font-black py-5 px-10 rounded-[2rem] flex items-center gap-4 hover:bg-brand-500 transition-all shadow-2xl shadow-brand-600/40 active:scale-95 text-xl group"
+              className="btn-primary"
             >
               <div className="bg-white/20 p-2 rounded-xl group-hover:scale-110 transition-transform">
                 <Plus size={28} />
@@ -247,7 +247,7 @@ const Stock: React.FC = () => {
                           {isAdmin && (
                             <button
                               onClick={() => handleDelete(product.id)}
-                              className="px-4 py-2 flex items-center gap-2 bg-rose-50 text-rose-600 hover:bg-rose-600 hover:text-white rounded-xl transition-all shadow-sm active:scale-95 border border-rose-100 text-xs font-black uppercase tracking-widest"
+                              className="px-4 py-2 flex items-center gap-2 bg-danger-50 text-danger-600 hover:bg-danger-600 hover:text-white rounded-xl transition-all shadow-sm active:scale-95 border border-danger-100 text-xs font-black uppercase tracking-widest"
                             >
                               <Trash2 size={16} />
                               Supprimer

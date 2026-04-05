@@ -4,6 +4,7 @@ import { useAuth } from './AuthProvider';
 import { api } from '../api';
 import { LayoutDashboard, Package, ShoppingCart, History, LogOut, User as UserIcon, Menu, X, Plus, PlusCircle, Users } from 'lucide-react';
 import { cn } from '../lib/utils';
+import { db, collection, query, onSnapshot } from '../firebase';
 
 const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { user, isAdmin, isAgent, logout } = useAuth();
@@ -14,18 +15,17 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
 
   React.useEffect(() => {
     if (isAdmin) {
-      const fetchPending = async () => {
-        try {
-          const users = await api.auth.list();
-          setPendingCount(users.filter((u: any) => !u.approved).length);
-        } catch (err) {
-          console.error(err);
-        }
-      };
-      fetchPending();
-      // Refresh every 30 seconds
-      const interval = setInterval(fetchPending, 30000);
-      return () => clearInterval(interval);
+      const path = 'users';
+      const q = query(collection(db, path));
+      
+      const unsubscribe = onSnapshot(q, (snapshot) => {
+        const users = snapshot.docs.map(doc => doc.data());
+        setPendingCount(users.filter((u: any) => !u.approved).length);
+      }, (err) => {
+        console.error('Error listening to users for pending count:', err);
+      });
+
+      return () => unsubscribe();
     }
   }, [isAdmin]);
 
@@ -67,7 +67,7 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
           )}
           <button 
             onClick={handleLogout}
-            className="w-12 h-12 rounded-2xl bg-rose-500/20 text-rose-500 flex items-center justify-center hover:bg-rose-500 hover:text-white transition-colors border border-rose-500/20"
+            className="w-12 h-12 rounded-2xl bg-danger-500/20 text-danger-500 flex items-center justify-center hover:bg-danger-500 hover:text-white transition-colors border border-danger-500/20"
             title="Déconnexion"
           >
             <LogOut size={24} />
@@ -167,9 +167,9 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
             </div>
             <button
               onClick={handleLogout}
-              className="flex items-center gap-4 w-full px-5 py-4 rounded-2xl bg-rose-50 text-rose-600 hover:bg-rose-600 hover:text-white transition-all duration-300 font-black uppercase tracking-widest text-xs group shadow-sm hover:shadow-lg hover:shadow-rose-600/20 active:scale-95"
+              className="btn-danger !px-5 !py-4 !text-xs !rounded-2xl"
             >
-              <div className="w-10 h-10 rounded-xl bg-white flex items-center justify-center group-hover:bg-rose-500 transition-colors shadow-sm">
+              <div className="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center group-hover:bg-white/30 transition-colors shadow-sm">
                 <LogOut size={20} />
               </div>
               Déconnexion

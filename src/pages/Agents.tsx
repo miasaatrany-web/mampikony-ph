@@ -193,7 +193,7 @@ const Agents: React.FC = () => {
                   <button
                     onClick={() => handleDelete(user.uid, user.email)}
                     disabled={actionLoading === user.uid}
-                    className="w-full bg-rose-50 text-rose-600 hover:bg-rose-600 hover:text-white font-black py-4 rounded-2xl transition-all active:scale-95 flex items-center justify-center gap-2 text-sm uppercase tracking-widest"
+                    className="w-full bg-danger-50 text-danger-600 hover:bg-danger-600 hover:text-white font-black py-4 rounded-2xl transition-all active:scale-95 flex items-center justify-center gap-2 text-sm uppercase tracking-widest"
                   >
                     <XIcon size={18} />
                     Rejeter et Supprimer
@@ -255,7 +255,7 @@ const Agents: React.FC = () => {
                     <button
                       onClick={() => handleDelete(user.uid, user.email)}
                       disabled={actionLoading === user.uid}
-                      className="px-4 py-2 text-rose-600 bg-rose-50 hover:bg-rose-600 hover:text-white rounded-xl transition-all shadow-sm flex items-center gap-2 text-xs font-black uppercase tracking-widest border border-rose-100"
+                      className="px-4 py-2 text-danger-600 bg-danger-50 hover:bg-danger-600 hover:text-white rounded-xl transition-all shadow-sm flex items-center gap-2 text-xs font-black uppercase tracking-widest border border-danger-100"
                     >
                       <Trash2 size={16} />
                       Supprimer

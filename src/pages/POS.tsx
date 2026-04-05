@@ -288,7 +288,7 @@ const POS: React.FC = () => {
             {cart.length > 0 && (
               <button 
                 onClick={() => setCart([])}
-                className="text-white/40 hover:text-rose-500 transition-colors p-2 rounded-lg hover:bg-rose-500/10"
+                className="text-white/40 hover:text-danger-500 transition-colors p-2 rounded-lg hover:bg-danger-500/10"
                 title="Vider"
               >
                 <Trash2 size={18} />
@@ -325,7 +325,7 @@ const POS: React.FC = () => {
                   </div>
                   <button
                     onClick={() => removeFromCart(item.productId)}
-                    className="w-8 h-8 flex items-center justify-center rounded-lg bg-rose-500/10 text-rose-500 hover:bg-rose-500 hover:text-white transition-all shadow-sm"
+                    className="w-8 h-8 flex items-center justify-center rounded-lg bg-danger-500/10 text-danger-500 hover:bg-danger-500 hover:text-white transition-all shadow-sm"
                   >
                     <Trash2 size={14} />
                   </button>

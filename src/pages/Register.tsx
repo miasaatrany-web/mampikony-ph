@@ -90,12 +90,12 @@ const Register: React.FC = () => {
   return (
     <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
       <div className="max-w-md w-full bg-white rounded-2xl shadow-xl overflow-hidden border border-gray-100">
-        <div className="bg-green-600 p-8 text-center">
+        <div className="bg-brand-600 p-8 text-center">
           <div className="bg-white w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 shadow-lg">
-            <Package className="text-green-600" size={32} />
+            <Package className="text-brand-600" size={32} />
           </div>
-          <h1 className="text-2xl font-bold text-white">Pharmacie Mampikony</h1>
-          <p className="text-green-100 mt-1">Créez votre compte professionnel</p>
+          <h1 className="text-2xl font-bold text-white tracking-tight">Pharmacie Mampikony</h1>
+          <p className="text-brand-100 mt-1 font-medium">Créez votre compte professionnel</p>
         </div>
 
         <div className="p-8">
@@ -124,12 +124,12 @@ const Register: React.FC = () => {
               </div>
             </div>
           ) : error ? (
-            <div className="bg-red-50 border-l-4 border-red-500 p-4 mb-6 flex flex-col gap-2 rounded-r-lg shadow-sm">
+            <div className="bg-danger-50 border-l-4 border-danger-500 p-4 mb-6 flex flex-col gap-2 rounded-r-lg shadow-sm">
               <div className="flex items-start gap-3">
-                <AlertCircle className="text-red-500 shrink-0 mt-0.5" size={20} />
+                <AlertCircle className="text-danger-500 shrink-0 mt-0.5" size={20} />
                 <div className="flex-1">
-                  <p className="text-sm text-red-700 font-bold">Erreur d'inscription</p>
-                  <p className="text-xs text-red-600 mt-1">
+                  <p className="text-sm text-danger-700 font-bold">Erreur d'inscription</p>
+                  <p className="text-xs text-danger-600 mt-1">
                     {error.startsWith('{') ? (
                       (() => {
                         try {
@@ -147,10 +147,10 @@ const Register: React.FC = () => {
                 </div>
               </div>
               {error.includes('déjà utilisé') && (
-                <div className="mt-3 pt-3 border-t border-red-100 flex flex-wrap gap-2">
+                <div className="mt-3 pt-3 border-t border-danger-100 flex flex-wrap gap-2">
                   <Link 
                     to="/login" 
-                    className="inline-flex items-center gap-2 text-xs font-bold text-red-700 hover:text-red-800 bg-white px-3 py-2 rounded-lg border border-red-200 transition-colors shadow-sm"
+                    className="inline-flex items-center gap-2 text-xs font-bold text-danger-700 hover:text-danger-800 bg-white px-3 py-2 rounded-lg border border-danger-200 transition-colors shadow-sm"
                   >
                     Se connecter
                     <ArrowRight size={14} />
@@ -164,7 +164,7 @@ const Register: React.FC = () => {
                 </div>
               )}
               {error.includes('unauthorized-domain') && (
-                <div className="mt-2 p-2 bg-white/50 rounded border border-red-100 text-[10px] text-red-500 italic">
+                <div className="mt-2 p-2 bg-white/50 rounded border border-danger-100 text-[10px] text-danger-500 italic">
                   Note: Ce domaine n'est pas autorisé dans Firebase. Ajoutez-le dans Authentication &rarr; Settings &rarr; Authorized Domains.
                 </div>
               )}
@@ -227,7 +227,7 @@ const Register: React.FC = () => {
                   className={cn(
                     "flex items-center justify-center gap-2 py-3 px-4 rounded-xl border-2 transition-all",
                     role === 'agent'
-                      ? "border-green-600 bg-green-50 text-green-700 font-bold"
+                      ? "border-brand-600 bg-brand-50 text-brand-700 font-bold"
                       : "border-gray-100 bg-gray-50 text-gray-500"
                   )}
                 >
@@ -240,7 +240,7 @@ const Register: React.FC = () => {
                   className={cn(
                     "flex items-center justify-center gap-2 py-3 px-4 rounded-xl border-2 transition-all",
                     role === 'admin'
-                      ? "border-green-600 bg-green-50 text-green-700 font-bold"
+                      ? "border-brand-600 bg-brand-50 text-brand-700 font-bold"
                       : "border-gray-100 bg-gray-50 text-gray-500"
                   )}
                 >
@@ -255,7 +255,7 @@ const Register: React.FC = () => {
               type="submit"
               disabled={loading}
               className={cn(
-                "w-full bg-green-600 text-white font-bold py-3 px-4 rounded-xl flex items-center justify-center gap-2 hover:bg-green-700 active:bg-green-800 transition-all shadow-lg shadow-green-600/20 mt-4",
+                "btn-primary w-full mt-4",
                 loading && "opacity-70 cursor-not-allowed"
               )}
             >

@@ -110,7 +110,7 @@ const Dashboard: React.FC = () => {
         <div className="flex items-center gap-4">
           <Link 
             to="/pos" 
-            className="bg-brand-600 text-white px-8 py-4 rounded-2xl font-black text-lg flex items-center gap-3 hover:bg-brand-500 transition-all shadow-xl shadow-brand-600/30 active:scale-95 group"
+            className="btn-primary"
           >
             <PlusCircle size={24} className="group-hover:rotate-90 transition-transform duration-300" />
             Nouvelle Vente
@@ -124,7 +124,7 @@ const Dashboard: React.FC = () => {
               logout();
               navigate('/login');
             }}
-            className="bg-rose-50 text-rose-600 px-6 py-4 rounded-2xl hover:bg-rose-600 hover:text-white transition-all shadow-sm active:scale-95 group flex items-center gap-3 font-black uppercase tracking-widest text-xs"
+            className="btn-danger !px-6 !py-3 !text-xs"
             title="Déconnexion"
           >
             <LogOut size={20} />
@@ -252,9 +252,7 @@ const Dashboard: React.FC = () => {
                                 if (window.confirm('Confirmer le paiement ?')) {
                                   try {
                                     await api.sales.update(sale.id, { status: 'paid' });
-                                    // Refresh data
-                                    const salesData = await api.sales.list();
-                                    setRecentSales(salesData.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()).slice(0, 5));
+                                    // No need to refresh manually, onSnapshot handles it
                                   } catch (err) {
                                     console.error(err);
                                   }

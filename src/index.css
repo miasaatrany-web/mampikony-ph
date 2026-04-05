@@ -15,6 +15,17 @@
   --color-brand-800: #166534;
   --color-brand-900: #14532d;
   --color-brand-950: #052e16;
+
+  --color-danger-50: #fef2f2;
+  --color-danger-100: #fee2e2;
+  --color-danger-200: #fecaca;
+  --color-danger-300: #fca5a5;
+  --color-danger-400: #f87171;
+  --color-danger-500: #ef4444;
+  --color-danger-600: #dc2626;
+  --color-danger-700: #b91c1c;
+  --color-danger-800: #991b1b;
+  --color-danger-900: #7f1d1d;
 }
 
 @layer base {
@@ -29,11 +40,15 @@
   }
   
   .btn-primary {
-    @apply bg-brand-600 hover:bg-brand-700 text-white font-bold py-3 px-6 rounded-2xl shadow-lg shadow-brand-600/20 transition-all active:scale-95 flex items-center justify-center gap-2;
+    @apply bg-brand-600 hover:bg-brand-700 text-white font-black py-4 px-8 rounded-2xl shadow-xl shadow-brand-600/30 transition-all active:scale-95 flex items-center justify-center gap-3 uppercase tracking-widest text-sm;
   }
   
+  .btn-danger {
+    @apply bg-danger-600 hover:bg-danger-700 text-white font-black py-4 px-8 rounded-2xl shadow-xl shadow-danger-600/30 transition-all active:scale-95 flex items-center justify-center gap-3 uppercase tracking-widest text-sm;
+  }
+
   .btn-secondary {
-    @apply bg-white hover:bg-slate-50 text-slate-900 border border-slate-200 font-bold py-3 px-6 rounded-2xl shadow-sm transition-all active:scale-95 flex items-center justify-center gap-2;
+    @apply bg-white hover:bg-slate-50 text-slate-900 border-2 border-slate-200 font-black py-4 px-8 rounded-2xl shadow-sm transition-all active:scale-95 flex items-center justify-center gap-3 uppercase tracking-widest text-sm;
   }
 
   .input-field {

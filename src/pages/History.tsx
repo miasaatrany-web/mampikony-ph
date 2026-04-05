@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { api } from '../api';
 import { Sale } from '../types';
 import { useAuth } from '../components/AuthProvider';
+import { db, collection, query, onSnapshot, handleFirestoreError, OperationType } from '../firebase';
 import { History as HistoryIcon, Search, CheckCircle2, Clock, Trash2, FileText, X, User, DollarSign, Calendar, ArrowLeft, Plus, PlusCircle, Send } from 'lucide-react';
 import { cn } from '../lib/utils';
 import { format } from 'date-fns';
@@ -17,19 +18,21 @@ const History: React.FC = () => {
   const [transmittingIds, setTransmittingIds] = useState<string[]>([]);
   const [validatingIds, setValidatingIds] = useState<string[]>([]);
 
-  const fetchSales = async () => {
-    try {
-      const data = await api.sales.list();
-      setSales(data.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()));
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setLoading(false);
-    }
-  };
-
   useEffect(() => {
-    fetchSales();
+    setLoading(true);
+    const path = 'sales';
+    const q = query(collection(db, path));
+    
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      const salesData = snapshot.docs.map(doc => doc.data() as Sale);
+      setSales(salesData.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()));
+      setLoading(false);
+    }, (error) => {
+      handleFirestoreError(error, OperationType.LIST, path);
+      setLoading(false);
+    });
+
+    return () => unsubscribe();
   }, []);
 
   const filteredSales = sales.filter(s =>
@@ -43,7 +46,6 @@ const History: React.FC = () => {
       console.log('Validating payment for sale:', id);
       try {
         await api.sales.update(id, { status: 'paid' });
-        await fetchSales();
         if (selectedSale?.id === id) {
           setSelectedSale(prev => prev ? { ...prev, status: 'paid' } : null);
         }
@@ -92,7 +94,6 @@ const History: React.FC = () => {
     if (window.confirm('Êtes-vous sûr de vouloir supprimer cette vente ?')) {
       try {
         await api.sales.delete(id);
-        fetchSales();
         setSelectedSale(null);
       } catch (err) {
         console.error(err);

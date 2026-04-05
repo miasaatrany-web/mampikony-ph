@@ -65,22 +65,22 @@ const Login: React.FC = () => {
   return (
     <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
       <div className="max-w-md w-full bg-white rounded-2xl shadow-xl overflow-hidden border border-gray-100">
-        <div className="bg-green-600 p-8 text-center">
+        <div className="bg-brand-600 p-8 text-center">
           <div className="bg-white w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 shadow-lg">
-            <Package className="text-green-600" size={32} />
+            <Package className="text-brand-600" size={32} />
           </div>
-          <h1 className="text-2xl font-bold text-white">Pharmacie Mampikony</h1>
-          <p className="text-green-100 mt-1">Accédez à votre espace de gestion</p>
+          <h1 className="text-2xl font-bold text-white tracking-tight">Pharmacie Mampikony</h1>
+          <p className="text-brand-100 mt-1 font-medium">Accédez à votre espace de gestion</p>
         </div>
 
         <div className="p-8">
           {error ? (
-            <div className="bg-red-50 border-l-4 border-red-500 p-4 mb-6 flex flex-col gap-2 rounded-r-lg shadow-sm">
+            <div className="bg-danger-50 border-l-4 border-danger-500 p-4 mb-6 flex flex-col gap-2 rounded-r-lg shadow-sm">
               <div className="flex items-start gap-3">
-                <AlertCircle className="text-red-500 shrink-0 mt-0.5" size={20} />
+                <AlertCircle className="text-danger-500 shrink-0 mt-0.5" size={20} />
                 <div className="flex-1">
-                  <p className="text-sm text-red-700 font-bold">Erreur de connexion</p>
-                  <p className="text-xs text-red-600 mt-1">
+                  <p className="text-sm text-danger-700 font-bold">Erreur de connexion</p>
+                  <p className="text-xs text-danger-600 mt-1">
                     {error.startsWith('{') ? (
                       (() => {
                         try {
@@ -146,7 +146,7 @@ const Login: React.FC = () => {
               type="submit"
               disabled={loading}
               className={cn(
-                "w-full bg-green-600 text-white font-bold py-3 px-4 rounded-xl flex items-center justify-center gap-2 hover:bg-green-700 active:bg-green-800 transition-all shadow-lg shadow-green-600/20",
+                "btn-primary w-full",
                 loading && "opacity-70 cursor-not-allowed"
               )}
             >

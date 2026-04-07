@@ -230,38 +230,7 @@ const Agents: React.FC = () => {
             ))
           ) : approvedUsers.length > 0 ? (
             approvedUsers.map((user) => (
-              <div key={user.uid} className="bg-white p-8 rounded-[2.5rem] border border-slate-100 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all group relative">
-                {isAdmin && user.email !== 'miasaatrany@gmail.com' && user.uid !== currentUser?.uid && (
-                  <div className="absolute top-6 right-6 flex flex-col gap-2">
-                    {user.role === 'agent' ? (
-                      <button
-                        onClick={() => handleUpdateRole(user.uid, 'admin')}
-                        disabled={actionLoading === user.uid}
-                        className="btn-info !px-4 !py-2 !text-[10px]"
-                      >
-                        <Shield size={16} />
-                        Promouvoir Admin
-                      </button>
-                    ) : (
-                      <button
-                        onClick={() => handleUpdateRole(user.uid, 'agent')}
-                        disabled={actionLoading === user.uid}
-                        className="btn-secondary !px-4 !py-2 !text-[10px]"
-                      >
-                        <ShieldAlert size={16} />
-                        Rétrograder Agent
-                      </button>
-                    )}
-                    <button
-                      onClick={() => handleDelete(user.uid, user.email)}
-                      disabled={actionLoading === user.uid}
-                      className="btn-danger !px-4 !py-2 !text-[10px]"
-                    >
-                      <Trash2 size={16} />
-                      Supprimer
-                    </button>
-                  </div>
-                )}
+              <div key={user.uid} className="bg-white p-8 rounded-[2.5rem] border border-slate-100 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all group relative flex flex-col">
                 <div className="flex items-center gap-5 mb-8">
                   <div className="w-16 h-16 rounded-2xl bg-slate-50 flex items-center justify-center text-brand-600 group-hover:bg-brand-600 group-hover:text-white transition-colors">
                     <User size={32} />
@@ -298,6 +267,38 @@ const Agents: React.FC = () => {
                   <Calendar size={14} />
                   Inscrit le {format(new Date(user.createdAt), 'dd/MM/yyyy', { locale: fr })}
                 </div>
+
+                {isAdmin && user.email !== 'miasaatrany@gmail.com' && user.uid !== currentUser?.uid && (
+                  <div className="flex flex-wrap gap-2 mt-6 pt-4 border-t border-slate-100">
+                    {user.role === 'agent' ? (
+                      <button
+                        onClick={() => handleUpdateRole(user.uid, 'admin')}
+                        disabled={actionLoading === user.uid}
+                        className="btn-info !px-4 !py-2 !text-[10px] flex-1"
+                      >
+                        <Shield size={16} />
+                        Promouvoir Admin
+                      </button>
+                    ) : (
+                      <button
+                        onClick={() => handleUpdateRole(user.uid, 'agent')}
+                        disabled={actionLoading === user.uid}
+                        className="btn-secondary !px-4 !py-2 !text-[10px] flex-1"
+                      >
+                        <ShieldAlert size={16} />
+                        Rétrograder Agent
+                      </button>
+                    )}
+                    <button
+                      onClick={() => handleDelete(user.uid, user.email)}
+                      disabled={actionLoading === user.uid}
+                      className="btn-danger !px-4 !py-2 !text-[10px] flex-1"
+                    >
+                      <Trash2 size={16} />
+                      Supprimer
+                    </button>
+                  </div>
+                )}
               </div>
             ))
           ) : (

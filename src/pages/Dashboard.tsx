@@ -4,7 +4,7 @@ import { useAuth } from '../components/AuthProvider';
 import { api } from '../api';
 import { Product, Sale, UserProfile } from '../types';
 import { db, collection, query, onSnapshot, handleFirestoreError, OperationType } from '../firebase';
-import { Package, ShoppingCart, AlertTriangle, TrendingUp, Clock, CheckCircle2, XCircle, ArrowRight, Plus, LogOut, PlusCircle, Users, ShieldAlert } from 'lucide-react';
+import { Package, ShoppingCart, AlertTriangle, TrendingUp, Clock, CheckCircle2, XCircle, ArrowRight, Plus, LogOut, PlusCircle, Users, ShieldAlert, Calendar } from 'lucide-react';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { cn } from '../lib/utils';
@@ -65,13 +65,15 @@ const Dashboard: React.FC = () => {
     .filter(s => format(new Date(s.createdAt), 'yyyy-MM-dd') === format(new Date(), 'yyyy-MM-dd'))
     .reduce((acc, s) => acc + s.total, 0);
 
+  const totalSalesMonth = allSales
+    .filter(s => format(new Date(s.createdAt), 'yyyy-MM') === format(new Date(), 'yyyy-MM'))
+    .reduce((acc, s) => acc + s.total, 0);
+
+  const totalSalesYear = allSales
+    .filter(s => format(new Date(s.createdAt), 'yyyy') === format(new Date(), 'yyyy'))
+    .reduce((acc, s) => acc + s.total, 0);
+
   const stats = [
-    {
-      label: 'Produits en stock',
-      value: products.length,
-      icon: Package,
-      color: 'bg-indigo-600',
-    },
     {
       label: 'Ventes du jour',
       value: `${totalSalesToday.toLocaleString()} Ar`,
@@ -79,16 +81,22 @@ const Dashboard: React.FC = () => {
       color: 'bg-brand-600',
     },
     {
+      label: 'Ventes du mois',
+      value: `${totalSalesMonth.toLocaleString()} Ar`,
+      icon: Calendar,
+      color: 'bg-indigo-600',
+    },
+    {
+      label: 'Ventes de l\'année',
+      value: `${totalSalesYear.toLocaleString()} Ar`,
+      icon: ShoppingCart,
+      color: 'bg-emerald-600',
+    },
+    {
       label: 'Stock faible',
       value: lowStockProducts.length,
       icon: AlertTriangle,
       color: 'bg-amber-500',
-    },
-    {
-      label: 'Produits expirés',
-      value: expiredProducts.length,
-      icon: XCircle,
-      color: 'bg-rose-500',
     }
   ];
 

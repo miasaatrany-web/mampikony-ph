@@ -79,6 +79,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const login = async (data: any) => {
     const { email, password } = data;
     try {
+      setLoading(true);
       const userCredential = await signInWithEmailAndPassword(auth, email, password);
       const firebaseUser = userCredential.user;
       
@@ -108,7 +109,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         await signOut(auth);
         throw new Error('Profil créé. Votre compte est en attente d\'approbation par un administrateur.');
       }
+      setLoading(false);
     } catch (error: any) {
+      setLoading(false);
       if (error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password' || error.code === 'auth/invalid-credential') {
         throw new Error('Email ou mot de passe incorrect.');
       }
@@ -184,6 +187,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const register = async (data: any) => {
     const { email, password, displayName, role } = data;
     try {
+      setLoading(true);
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
       const firebaseUser = userCredential.user;
       
@@ -205,6 +209,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       
       if (!approved) {
         await signOut(auth);
+        setLoading(false);
         return { 
           pendingApproval: true, 
           message: 'Compte créé avec succès ! Votre compte est en attente d\'approbation par un administrateur.' 
@@ -212,8 +217,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
 
       setUser(newUser);
+      setLoading(false);
       return { user: newUser };
     } catch (error: any) {
+      setLoading(false);
       console.error('Registration Auth Error:', error);
       if (error.code === 'auth/email-already-in-use') {
         throw new Error('Cet email est déjà utilisé par un autre compte.');

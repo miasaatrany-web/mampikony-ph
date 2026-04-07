@@ -23,6 +23,7 @@ const Stock: React.FC = () => {
     name: '',
     price: '',
     quantity: '',
+    unit: 'unité' as 'unité' | 'boîte',
     expirationDate: '',
     lowStockThreshold: '5'
   });
@@ -62,6 +63,7 @@ const Stock: React.FC = () => {
         name: product.name,
         price: product.price.toString(),
         quantity: product.quantity.toString(),
+        unit: product.unit || 'unité',
         expirationDate: product.expirationDate,
         lowStockThreshold: (product.lowStockThreshold || 5).toString()
       });
@@ -71,6 +73,7 @@ const Stock: React.FC = () => {
         name: '',
         price: '',
         quantity: '',
+        unit: 'unité',
         expirationDate: '',
         lowStockThreshold: '5'
       });
@@ -84,6 +87,7 @@ const Stock: React.FC = () => {
       name: formData.name,
       price: parseFloat(formData.price),
       quantity: parseInt(formData.quantity),
+      unit: formData.unit,
       expirationDate: formData.expirationDate,
       lowStockThreshold: parseInt(formData.lowStockThreshold)
     };
@@ -212,7 +216,9 @@ const Stock: React.FC = () => {
                           )}>
                             {product.quantity}
                           </span>
-                          <span className="text-slate-400 font-bold text-sm">unités</span>
+                          <span className="text-slate-400 font-bold text-sm">
+                            {product.unit === 'boîte' ? (product.quantity > 1 ? 'boîtes' : 'boîte') : (product.quantity > 1 ? 'unités' : 'unité')}
+                          </span>
                         </div>
                       </td>
                       <td className="px-8 py-5">
@@ -327,19 +333,31 @@ const Stock: React.FC = () => {
                   </div>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Quantité</label>
-                  <div className="relative">
-                    <Layers className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
-                    <input
-                      type="number"
-                      required
-                      min="0"
-                      value={formData.quantity}
-                      onChange={(e) => setFormData({ ...formData, quantity: e.target.value })}
-                      className="w-full pl-10 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none transition-all"
-                      placeholder="0"
-                    />
-                  </div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Unité</label>
+                  <select
+                    value={formData.unit}
+                    onChange={(e) => setFormData({ ...formData, unit: e.target.value as any })}
+                    className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none transition-all font-bold"
+                  >
+                    <option value="unité">Unité</option>
+                    <option value="boîte">Boîte</option>
+                  </select>
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Quantité en stock</label>
+                <div className="relative">
+                  <Layers className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+                  <input
+                    type="number"
+                    required
+                    min="0"
+                    value={formData.quantity}
+                    onChange={(e) => setFormData({ ...formData, quantity: e.target.value })}
+                    className="w-full pl-10 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none transition-all"
+                    placeholder="0"
+                  />
                 </div>
               </div>
 

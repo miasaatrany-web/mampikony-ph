@@ -14,6 +14,7 @@ export interface Product {
   name: string;
   price: number;
   quantity: number;
+  unit: 'unité' | 'boîte';
   expirationDate: string;
   lowStockThreshold?: number;
   updatedAt: string;

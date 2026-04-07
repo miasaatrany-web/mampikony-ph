@@ -102,6 +102,21 @@ const History: React.FC = () => {
     }
   };
 
+  const handleDeleteAll = async () => {
+    if (window.confirm('ATTENTION: Êtes-vous sûr de vouloir supprimer TOUT l\'historique des ventes ? Cette action est irréversible.')) {
+      try {
+        setLoading(true);
+        await api.sales.deleteAll();
+        alert('Tout l\'historique a été supprimé.');
+      } catch (err) {
+        console.error(err);
+        alert('Erreur lors de la suppression de l\'historique.');
+      } finally {
+        setLoading(false);
+      }
+    }
+  };
+
   return (
     <div className="space-y-10 pb-12">
       <header className="flex flex-col md:flex-row md:items-center justify-between gap-6">
@@ -119,6 +134,15 @@ const History: React.FC = () => {
           <p className="text-slate-500 mt-2 text-lg">Consultez et gérez toutes les transactions passées.</p>
         </div>
         <div className="flex flex-wrap items-center gap-4">
+          {isAdmin && (
+            <button
+              onClick={handleDeleteAll}
+              className="btn-danger !bg-rose-600 !text-white !border-none"
+            >
+              <Trash2 size={24} />
+              Supprimer l'historique
+            </button>
+          )}
           <Link 
             to="/pos" 
             className="bg-brand-600 text-white font-black py-5 px-8 rounded-[2rem] flex items-center gap-4 hover:bg-brand-500 transition-all shadow-2xl shadow-brand-600/40 active:scale-95 text-xl group"

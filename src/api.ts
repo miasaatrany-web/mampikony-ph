@@ -124,6 +124,16 @@ export const api = {
         handleFirestoreError(error, OperationType.DELETE, path);
       }
     },
+    deleteAll: async () => {
+      const path = 'products';
+      try {
+        const querySnapshot = await getDocs(collection(db, path));
+        const deletePromises = querySnapshot.docs.map(doc => deleteDoc(doc.ref));
+        await Promise.all(deletePromises);
+      } catch (error) {
+        handleFirestoreError(error, OperationType.DELETE, path);
+      }
+    },
   },
   sales: {
     list: async () => {
@@ -177,6 +187,16 @@ export const api = {
       const path = `sales/${id}`;
       try {
         await deleteDoc(doc(db, path));
+      } catch (error) {
+        handleFirestoreError(error, OperationType.DELETE, path);
+      }
+    },
+    deleteAll: async () => {
+      const path = 'sales';
+      try {
+        const querySnapshot = await getDocs(collection(db, path));
+        const deletePromises = querySnapshot.docs.map(doc => deleteDoc(doc.ref));
+        await Promise.all(deletePromises);
       } catch (error) {
         handleFirestoreError(error, OperationType.DELETE, path);
       }

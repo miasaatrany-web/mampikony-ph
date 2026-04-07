@@ -13,6 +13,7 @@ const POS: React.FC = () => {
   const { user, isAgent, isAdmin } = useAuth();
   const [products, setProducts] = useState<Product[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
+  const [activeUnitFilter, setActiveUnitFilter] = useState<'all' | 'unité' | 'boîte'>('all');
   const [cart, setCart] = useState<SaleItem[]>([]);
   const [customerName, setCustomerName] = useState('');
   const [isSuccessModalOpen, setIsSuccessModalOpen] = useState(false);
@@ -37,9 +38,11 @@ const POS: React.FC = () => {
     return () => unsubscribe();
   }, []);
 
-  const filteredProducts = products.filter(p =>
-    p.name.toLowerCase().includes(searchTerm.toLowerCase()) && p.quantity > 0
-  );
+  const filteredProducts = products.filter(p => {
+    const matchesSearch = p.name.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesUnit = activeUnitFilter === 'all' || p.unit === activeUnitFilter;
+    return matchesSearch && matchesUnit && p.quantity > 0;
+  });
 
   const addToCart = (product: Product) => {
     const existingItem = cart.find(item => item.productId === product.id);
@@ -173,8 +176,8 @@ const POS: React.FC = () => {
           </h1>
         </header>
 
-        <div className="bg-white p-4 rounded-2xl shadow-sm border border-slate-100">
-          <div className="relative">
+        <div className="flex flex-col md:flex-row gap-4 items-center justify-between bg-white p-4 rounded-2xl shadow-sm border border-slate-100">
+          <div className="relative flex-1 w-full">
             <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={20} />
             <input
               type="text"
@@ -183,6 +186,36 @@ const POS: React.FC = () => {
               onChange={(e) => setSearchTerm(e.target.value)}
               className="w-full pl-12 pr-4 py-4 bg-slate-50 border-none rounded-xl focus:ring-2 focus:ring-brand-500 font-medium text-base placeholder:text-slate-400 transition-all"
             />
+          </div>
+          
+          <div className="flex bg-slate-100 p-1 rounded-xl w-full md:w-auto">
+            <button
+              onClick={() => setActiveUnitFilter('all')}
+              className={cn(
+                "flex-1 md:px-4 py-2 rounded-lg font-black text-[10px] uppercase tracking-widest transition-all",
+                activeUnitFilter === 'all' ? "bg-white text-brand-600 shadow-sm" : "text-slate-500 hover:text-slate-700"
+              )}
+            >
+              Tous
+            </button>
+            <button
+              onClick={() => setActiveUnitFilter('unité')}
+              className={cn(
+                "flex-1 md:px-4 py-2 rounded-lg font-black text-[10px] uppercase tracking-widest transition-all",
+                activeUnitFilter === 'unité' ? "bg-white text-brand-600 shadow-sm" : "text-slate-500 hover:text-slate-700"
+              )}
+            >
+              Unités
+            </button>
+            <button
+              onClick={() => setActiveUnitFilter('boîte')}
+              className={cn(
+                "flex-1 md:px-4 py-2 rounded-lg font-black text-[10px] uppercase tracking-widest transition-all",
+                activeUnitFilter === 'boîte' ? "bg-white text-brand-600 shadow-sm" : "text-slate-500 hover:text-slate-700"
+              )}
+            >
+              Boîtes
+            </button>
           </div>
         </div>
 
@@ -319,10 +352,12 @@ const POS: React.FC = () => {
             cart.map(item => (
               <div key={item.productId} className="bg-white/5 p-4 rounded-xl border border-white/5">
                 <div className="flex justify-between items-start mb-2">
-                  <div className="flex-1 min-w-0">
-                    <p className="font-bold text-base leading-tight truncate">{item.productName}</p>
-                    <p className="text-[10px] text-white/40 font-bold uppercase tracking-widest mt-0.5">{item.price.toLocaleString()} Ar / unité</p>
-                  </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="font-bold text-base leading-tight truncate">{item.productName}</p>
+                      <p className="text-[10px] text-white/40 font-bold uppercase tracking-widest mt-0.5">
+                        {item.price.toLocaleString()} Ar / {products.find(p => p.id === item.productId)?.unit || 'unité'}
+                      </p>
+                    </div>
                   <button
                     onClick={() => removeFromCart(item.productId)}
                     className="w-8 h-8 flex items-center justify-center rounded-lg bg-danger-500/10 text-danger-500 hover:bg-danger-500 hover:text-white transition-all shadow-sm"

@@ -14,6 +14,7 @@ const Stock: React.FC = () => {
   const location = useLocation();
   const [products, setProducts] = useState<Product[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
+  const [activeUnitFilter, setActiveUnitFilter] = useState<'all' | 'unité' | 'boîte'>('all');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [loading, setLoading] = useState(true);
@@ -52,9 +53,11 @@ const Stock: React.FC = () => {
     return () => unsubscribe();
   }, [location, isAdmin, isAgent]);
 
-  const filteredProducts = products.filter(p =>
-    p.name.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const filteredProducts = products.filter(p => {
+    const matchesSearch = p.name.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesUnit = activeUnitFilter === 'all' || p.unit === activeUnitFilter;
+    return matchesSearch && matchesUnit;
+  });
 
   const handleOpenModal = (product?: Product) => {
     if (product) {
@@ -116,6 +119,21 @@ const Stock: React.FC = () => {
     }
   };
 
+  const handleDeleteAll = async () => {
+    if (window.confirm('ATTENTION: Êtes-vous sûr de vouloir supprimer TOUT le stock ? Cette action est irréversible.')) {
+      try {
+        setLoading(true);
+        await api.products.deleteAll();
+        alert('Tout le stock a été supprimé.');
+      } catch (err) {
+        console.error(err);
+        alert('Erreur lors de la suppression du stock.');
+      } finally {
+        setLoading(false);
+      }
+    }
+  };
+
   return (
     <div className="space-y-10 pb-12">
       <header className="flex flex-col md:flex-row md:items-center justify-between gap-6">
@@ -128,6 +146,15 @@ const Stock: React.FC = () => {
           <p className="text-slate-500 mt-2 text-lg">Gérez l'inventaire de vos médicaments en temps réel.</p>
         </div>
         <div className="flex flex-wrap items-center gap-4">
+          {isAdmin && (
+            <button
+              onClick={handleDeleteAll}
+              className="btn-danger !bg-rose-600 !text-white !border-none"
+            >
+              <Trash2 size={28} />
+              Supprimer tout le stock
+            </button>
+          )}
           <Link 
             to="/pos" 
             className="btn-secondary !bg-slate-900 !text-white !border-none"
@@ -152,8 +179,8 @@ const Stock: React.FC = () => {
       </header>
 
       {/* Search and Filters */}
-      <div className="bg-white p-6 rounded-3xl shadow-sm border border-slate-100 flex items-center gap-4">
-        <div className="relative flex-1">
+      <div className="flex flex-col md:flex-row gap-4 items-center justify-between bg-white p-6 rounded-3xl shadow-sm border border-slate-100">
+        <div className="relative flex-1 w-full">
           <Search className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-400" size={24} />
           <input
             type="text"
@@ -162,6 +189,36 @@ const Stock: React.FC = () => {
             onChange={(e) => setSearchTerm(e.target.value)}
             className="w-full pl-14 pr-6 py-5 bg-slate-50 border-none rounded-2xl focus:ring-2 focus:ring-brand-500 font-medium text-lg placeholder:text-slate-400 transition-all"
           />
+        </div>
+        
+        <div className="flex bg-slate-100 p-1.5 rounded-2xl w-full md:w-auto">
+          <button
+            onClick={() => setActiveUnitFilter('all')}
+            className={cn(
+              "flex-1 md:px-6 py-3 rounded-xl font-black text-xs uppercase tracking-widest transition-all",
+              activeUnitFilter === 'all' ? "bg-white text-brand-600 shadow-sm" : "text-slate-500 hover:text-slate-700"
+            )}
+          >
+            Tous
+          </button>
+          <button
+            onClick={() => setActiveUnitFilter('unité')}
+            className={cn(
+              "flex-1 md:px-6 py-3 rounded-xl font-black text-xs uppercase tracking-widest transition-all",
+              activeUnitFilter === 'unité' ? "bg-white text-brand-600 shadow-sm" : "text-slate-500 hover:text-slate-700"
+            )}
+          >
+            Unités
+          </button>
+          <button
+            onClick={() => setActiveUnitFilter('boîte')}
+            className={cn(
+              "flex-1 md:px-6 py-3 rounded-xl font-black text-xs uppercase tracking-widest transition-all",
+              activeUnitFilter === 'boîte' ? "bg-white text-brand-600 shadow-sm" : "text-slate-500 hover:text-slate-700"
+            )}
+          >
+            Boîtes
+          </button>
         </div>
       </div>
 

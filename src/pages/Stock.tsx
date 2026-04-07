@@ -16,6 +16,8 @@ const Stock: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [activeUnitFilter, setActiveUnitFilter] = useState<'all' | 'unité' | 'boîte'>('all');
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [productToDelete, setProductToDelete] = useState<string | null>(null);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -109,28 +111,19 @@ const Stock: React.FC = () => {
   };
 
   const handleDelete = async (id: string) => {
-    if (window.confirm('Êtes-vous sûr de vouloir supprimer ce produit ?')) {
-      try {
-        await api.products.delete(id);
-      } catch (err) {
-        console.error(err);
-        alert('Erreur lors de la suppression.');
-      }
-    }
+    setProductToDelete(id);
+    setIsDeleteModalOpen(true);
   };
 
-  const handleDeleteAll = async () => {
-    if (window.confirm('ATTENTION: Êtes-vous sûr de vouloir supprimer TOUT le stock ? Cette action est irréversible.')) {
-      try {
-        setLoading(true);
-        await api.products.deleteAll();
-        alert('Tout le stock a été supprimé.');
-      } catch (err) {
-        console.error(err);
-        alert('Erreur lors de la suppression du stock.');
-      } finally {
-        setLoading(false);
-      }
+  const confirmDelete = async () => {
+    if (!productToDelete) return;
+    try {
+      await api.products.delete(productToDelete);
+      setIsDeleteModalOpen(false);
+      setProductToDelete(null);
+    } catch (err) {
+      console.error(err);
+      alert('Erreur lors de la suppression.');
     }
   };
 
@@ -146,15 +139,6 @@ const Stock: React.FC = () => {
           <p className="text-slate-500 mt-2 text-lg">Gérez l'inventaire de vos médicaments en temps réel.</p>
         </div>
         <div className="flex flex-wrap items-center gap-4">
-          {isAdmin && (
-            <button
-              onClick={handleDeleteAll}
-              className="btn-danger !bg-rose-600 !text-white !border-none"
-            >
-              <Trash2 size={28} />
-              Supprimer tout le stock
-            </button>
-          )}
           <Link 
             to="/pos" 
             className="btn-secondary !bg-slate-900 !text-white !border-none"
@@ -449,20 +433,35 @@ const Stock: React.FC = () => {
                 </div>
               </div>
 
-              <div className="pt-4 flex gap-3">
-                <button
-                  type="button"
-                  onClick={() => setIsModalOpen(false)}
-                  className="flex-1 px-4 py-3 border border-gray-200 text-gray-600 font-bold rounded-xl hover:bg-gray-50 transition-all"
-                >
-                  Annuler
-                </button>
-                <button
-                  type="submit"
-                  className="btn-primary flex-1"
-                >
-                  {editingProduct ? 'Mettre à jour' : 'Ajouter'}
-                </button>
+              <div className="pt-4 flex flex-col gap-3">
+                <div className="flex gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setIsModalOpen(false)}
+                    className="flex-1 px-4 py-3 border border-gray-200 text-gray-600 font-bold rounded-xl hover:bg-gray-50 transition-all"
+                  >
+                    Annuler
+                  </button>
+                  <button
+                    type="submit"
+                    className="btn-primary flex-1"
+                  >
+                    {editingProduct ? 'Mettre à jour' : 'Ajouter'}
+                  </button>
+                </div>
+                {editingProduct && isAdmin && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsModalOpen(false);
+                      handleDelete(editingProduct.id);
+                    }}
+                    className="w-full bg-rose-100 text-rose-600 font-bold py-3 rounded-xl hover:bg-rose-200 transition-all flex items-center justify-center gap-2"
+                  >
+                    <Trash2 size={18} />
+                    Supprimer ce produit
+                  </button>
+                )}
               </div>
             </form>
           </div>
@@ -489,6 +488,36 @@ const Stock: React.FC = () => {
           </>
         )}
       </div>
+      {/* Delete Confirmation Modal */}
+      {isDeleteModalOpen && (
+        <div className="fixed inset-0 z-[110] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-md">
+          <div className="bg-white w-full max-w-md rounded-[2.5rem] shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-300 p-10 border border-white/20 text-center">
+            <div className="w-24 h-24 bg-rose-100 text-rose-600 rounded-[2rem] flex items-center justify-center mx-auto mb-8 shadow-lg shadow-rose-600/10">
+              <Trash2 size={48} />
+            </div>
+            <h2 className="text-3xl font-black text-slate-900 mb-3 tracking-tight">Supprimer le produit ?</h2>
+            <p className="text-slate-500 mb-10 font-medium">Cette action est irréversible. Êtes-vous sûr de vouloir supprimer ce produit du stock ?</p>
+            
+            <div className="flex flex-col gap-4">
+              <button
+                onClick={confirmDelete}
+                className="w-full bg-rose-600 text-white font-black py-5 rounded-2xl hover:bg-rose-500 transition-all shadow-xl shadow-rose-600/20 active:scale-95 text-lg"
+              >
+                Oui, supprimer
+              </button>
+              <button
+                onClick={() => {
+                  setIsDeleteModalOpen(false);
+                  setProductToDelete(null);
+                }}
+                className="w-full bg-slate-100 text-slate-600 font-black py-5 rounded-2xl hover:bg-slate-200 transition-all active:scale-95 text-lg"
+              >
+                Annuler
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

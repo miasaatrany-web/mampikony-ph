@@ -14,6 +14,8 @@ const History: React.FC = () => {
   const [sales, setSales] = useState<Sale[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedSale, setSelectedSale] = useState<Sale | null>(null);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [saleToDelete, setSaleToDelete] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [transmittingIds, setTransmittingIds] = useState<string[]>([]);
   const [validatingIds, setValidatingIds] = useState<string[]>([]);
@@ -91,29 +93,20 @@ const History: React.FC = () => {
   };
 
   const handleDeleteSale = async (id: string) => {
-    if (window.confirm('Êtes-vous sûr de vouloir supprimer cette vente ?')) {
-      try {
-        await api.sales.delete(id);
-        setSelectedSale(null);
-      } catch (err) {
-        console.error(err);
-        alert('Erreur lors de la suppression.');
-      }
-    }
+    setSaleToDelete(id);
+    setIsDeleteModalOpen(true);
   };
 
-  const handleDeleteAll = async () => {
-    if (window.confirm('ATTENTION: Êtes-vous sûr de vouloir supprimer TOUT l\'historique des ventes ? Cette action est irréversible.')) {
-      try {
-        setLoading(true);
-        await api.sales.deleteAll();
-        alert('Tout l\'historique a été supprimé.');
-      } catch (err) {
-        console.error(err);
-        alert('Erreur lors de la suppression de l\'historique.');
-      } finally {
-        setLoading(false);
-      }
+  const confirmDelete = async () => {
+    if (!saleToDelete) return;
+    try {
+      await api.sales.delete(saleToDelete);
+      setIsDeleteModalOpen(false);
+      setSaleToDelete(null);
+      setSelectedSale(null);
+    } catch (err) {
+      console.error(err);
+      alert('Erreur lors de la suppression.');
     }
   };
 
@@ -134,15 +127,6 @@ const History: React.FC = () => {
           <p className="text-slate-500 mt-2 text-lg">Consultez et gérez toutes les transactions passées.</p>
         </div>
         <div className="flex flex-wrap items-center gap-4">
-          {isAdmin && (
-            <button
-              onClick={handleDeleteAll}
-              className="btn-danger !bg-rose-600 !text-white !border-none"
-            >
-              <Trash2 size={24} />
-              Supprimer l'historique
-            </button>
-          )}
           <Link 
             to="/pos" 
             className="bg-brand-600 text-white font-black py-5 px-8 rounded-[2rem] flex items-center gap-4 hover:bg-brand-500 transition-all shadow-2xl shadow-brand-600/40 active:scale-95 text-xl group"
@@ -454,9 +438,55 @@ const History: React.FC = () => {
                   className="flex-1 bg-slate-900 text-white font-black py-5 rounded-2xl hover:bg-slate-800 transition-all shadow-xl active:scale-95 flex items-center justify-center gap-3"
                 >
                   <FileText size={24} />
-                  Imprimer la facture
+                  Imprimer
                 </button>
+                {isAdmin && (
+                  <button
+                    onClick={() => handleDeleteSale(selectedSale.id)}
+                    className="flex-1 bg-rose-600 text-white font-black py-5 rounded-2xl hover:bg-rose-500 transition-all shadow-xl shadow-rose-600/20 active:scale-95 flex items-center justify-center gap-3"
+                  >
+                    <Trash2 size={24} />
+                    Supprimer
+                  </button>
+                )}
               </div>
+              <button
+                onClick={() => setSelectedSale(null)}
+                className="w-full mt-4 bg-slate-100 text-slate-600 font-black py-5 rounded-2xl hover:bg-slate-200 transition-all active:scale-95 text-xl"
+              >
+                Fermer
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Delete Confirmation Modal */}
+      {isDeleteModalOpen && (
+        <div className="fixed inset-0 z-[110] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-md">
+          <div className="bg-white w-full max-w-md rounded-[2.5rem] shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-300 p-10 border border-white/20 text-center">
+            <div className="w-24 h-24 bg-rose-100 text-rose-600 rounded-[2rem] flex items-center justify-center mx-auto mb-8 shadow-lg shadow-rose-600/10">
+              <Trash2 size={48} />
+            </div>
+            <h2 className="text-3xl font-black text-slate-900 mb-3 tracking-tight">Supprimer la vente ?</h2>
+            <p className="text-slate-500 mb-10 font-medium">Cette action est irréversible. Êtes-vous sûr de vouloir supprimer cette fiche de vente ?</p>
+            
+            <div className="flex flex-col gap-4">
+              <button
+                onClick={confirmDelete}
+                className="w-full bg-rose-600 text-white font-black py-5 rounded-2xl hover:bg-rose-500 transition-all shadow-xl shadow-rose-600/20 active:scale-95 text-lg"
+              >
+                Oui, supprimer
+              </button>
+              <button
+                onClick={() => {
+                  setIsDeleteModalOpen(false);
+                  setSaleToDelete(null);
+                }}
+                className="w-full bg-slate-100 text-slate-600 font-black py-5 rounded-2xl hover:bg-slate-200 transition-all active:scale-95 text-lg"
+              >
+                Annuler
+              </button>
             </div>
           </div>
         </div>

@@ -21,13 +21,24 @@
       "properties": {
         "id": { "type": "string" },
         "name": { "type": "string" },
-        "price": { "type": "number" },
-        "quantity": { "type": "number" },
-        "expirationDate": { "type": "string", "format": "date-time" },
-        "lowStockThreshold": { "type": "number" },
+        "priceBoite": { "type": "number" },
+        "pricePlaquette": { "type": "number" },
+        "pricePillule": { "type": "number" },
+        "purchasePriceBoite": { "type": "number" },
+        "purchasePricePlaquette": { "type": "number" },
+        "purchasePricePillule": { "type": "number" },
+        "packsPerBox": { "type": "number" },
+        "pillsPerPack": { "type": "number" },
+        "totalQuantityPillules": { "type": "number" },
+        "pharmacyQuantityPillules": { "type": "number" },
+        "lowStockThresholdPillules": { "type": "number" },
+        "source": { "type": "string" },
+        "grossisteName": { "type": "string" },
+        "showInPharmacy": { "type": "boolean" },
+        "showInStock": { "type": "boolean" },
         "updatedAt": { "type": "string", "format": "date-time" }
       },
-      "required": ["id", "name", "price", "quantity", "expirationDate", "updatedAt"]
+      "required": ["id", "name", "totalQuantityPillules", "updatedAt"]
     },
     "Sale": {
       "title": "Sale",
@@ -44,17 +55,37 @@
               "productId": { "type": "string" },
               "productName": { "type": "string" },
               "quantity": { "type": "number" },
-              "price": { "type": "number" }
+              "price": { "type": "number" },
+              "unit": { "type": "string" }
             }
           }
         },
         "total": { "type": "number" },
         "agentId": { "type": "string" },
         "agentName": { "type": "string" },
+        "cashierId": { "type": "string" },
+        "cashierName": { "type": "string" },
         "status": { "type": "string", "enum": ["pending", "paid"] },
         "createdAt": { "type": "string", "format": "date-time" }
       },
       "required": ["id", "items", "total", "agentId", "status", "createdAt"]
+    },
+    "InventoryLog": {
+      "title": "Inventory Log",
+      "description": "Log of inventory movements",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "productId": { "type": "string" },
+        "productName": { "type": "string" },
+        "type": { "type": "string", "enum": ["addition", "transfer_to_pharmacy", "return_to_stock", "stock_exit"] },
+        "quantityPillules": { "type": "number" },
+        "details": { "type": "string" },
+        "userId": { "type": "string" },
+        "userName": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "productId", "productName", "type", "quantityPillules", "userId", "createdAt"]
     }
   },
   "firestore": {
@@ -69,6 +100,10 @@
     "/sales/{saleId}": {
       "schema": "Sale",
       "description": "Sales"
+    },
+    "/inventory-logs/{logId}": {
+      "schema": "InventoryLog",
+      "description": "Inventory movement logs"
     }
   }
 }

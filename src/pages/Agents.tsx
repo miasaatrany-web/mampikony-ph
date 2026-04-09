@@ -2,8 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { api } from '../api';
 import { useAuth } from '../components/AuthProvider';
 import { UserProfile, Sale, UserRole } from '../types';
-import { db, collection, query, onSnapshot, handleFirestoreError, OperationType } from '../firebase';
-import { Users, Search, ArrowLeft, User, DollarSign, ShoppingBag, Calendar, Check, X as XIcon, Trash2, Shield, ShieldAlert } from 'lucide-react';
+import { Users, Search, ArrowLeft, User, DollarSign, ShoppingBag, Calendar, Check, X as XIcon, Trash2, Shield, ShieldAlert, ShoppingCart } from 'lucide-react';
 import { Link, Navigate } from 'react-router-dom';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
@@ -15,45 +14,21 @@ const Agents: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [actionLoading, setActionLoading] = useState<string | null>(null);
 
+  const fetchUsers = async () => {
+    setLoading(true);
+    try {
+      const data = await api.auth.list();
+      setUsers(data);
+    } catch (error) {
+      console.error('Error fetching users:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
     if (!isAdmin) return;
-
-    setLoading(true);
-    
-    let usersData: UserProfile[] = [];
-    let salesData: Sale[] = [];
-
-    const updateUsersWithStats = () => {
-      const combined = usersData.map(user => {
-        const userSales = salesData.filter(s => s.agentId === user.uid);
-        return {
-          ...user,
-          salesCount: userSales.length,
-          totalSales: userSales.reduce((acc, s) => acc + s.total, 0)
-        };
-      });
-      setUsers(combined);
-      setLoading(false);
-    };
-
-    const usersUnsubscribe = onSnapshot(query(collection(db, 'users')), (snapshot) => {
-      usersData = snapshot.docs.map(doc => doc.data() as UserProfile);
-      updateUsersWithStats();
-    }, (error) => {
-      handleFirestoreError(error, OperationType.LIST, 'users');
-    });
-
-    const salesUnsubscribe = onSnapshot(query(collection(db, 'sales')), (snapshot) => {
-      salesData = snapshot.docs.map(doc => doc.data() as Sale);
-      updateUsersWithStats();
-    }, (error) => {
-      handleFirestoreError(error, OperationType.LIST, 'sales');
-    });
-
-    return () => {
-      usersUnsubscribe();
-      salesUnsubscribe();
-    };
+    fetchUsers();
   }, [isAdmin]);
 
   const handleApprove = async (id: string) => {
@@ -61,6 +36,7 @@ const Agents: React.FC = () => {
       setActionLoading(id);
       try {
         await api.auth.approve(id);
+        fetchUsers();
       } catch (err) {
         console.error(err);
         alert('Erreur lors de l\'approbation.');
@@ -71,11 +47,16 @@ const Agents: React.FC = () => {
   };
 
   const handleUpdateRole = async (id: string, role: UserRole) => {
-    const action = role === 'admin' ? 'promouvoir en administrateur' : 'rétrograder en agent';
+    let action = '';
+    if (role === 'admin') action = 'promouvoir en administrateur';
+    else if (role === 'agent') action = 'passer en agent';
+    else action = 'passer en caissier';
+
     if (window.confirm(`Voulez-vous ${action} ce compte ?`)) {
       setActionLoading(id);
       try {
         await api.auth.updateRole(id, role);
+        fetchUsers();
       } catch (err) {
         console.error(err);
         alert('Erreur lors de la mise à jour du rôle.');
@@ -98,6 +79,7 @@ const Agents: React.FC = () => {
       setActionLoading(id);
       try {
         await api.auth.delete(id);
+        fetchUsers();
       } catch (err) {
         console.error(err);
         alert('Erreur lors de la suppression.');
@@ -239,7 +221,9 @@ const Agents: React.FC = () => {
                     <h3 className="text-xl font-black text-slate-900 leading-tight">{user.displayName}</h3>
                     <p className="text-slate-400 font-bold text-sm">{user.email}</p>
                     <span className={`inline-block mt-2 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest ${
-                      user.role === 'admin' ? 'bg-brand-100 text-brand-700' : 'bg-indigo-100 text-indigo-700'
+                      user.role === 'admin' ? 'bg-brand-100 text-brand-700' : 
+                      user.role === 'agent' ? 'bg-indigo-100 text-indigo-700' : 
+                      'bg-amber-100 text-amber-700'
                     }`}>
                       {user.role}
                     </span>
@@ -254,13 +238,15 @@ const Agents: React.FC = () => {
                       <span className="text-xl font-black">{user.salesCount}</span>
                     </div>
                   </div>
-                  <div className="bg-slate-50 p-4 rounded-2xl">
-                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Chiffre d'Aff.</p>
-                    <div className="flex items-center gap-2 text-slate-900">
-                      <DollarSign size={16} className="text-emerald-600" />
-                      <span className="text-xl font-black">{(user.totalSales || 0).toLocaleString()}</span>
+                  {user.role !== 'agent' && (
+                    <div className="bg-slate-50 p-4 rounded-2xl">
+                      <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Chiffre d'Aff.</p>
+                      <div className="flex items-center gap-2 text-slate-900">
+                        <DollarSign size={16} className="text-brand-600" />
+                        <span className="text-xl font-black">{(user.totalSales || 0).toLocaleString()}</span>
+                      </div>
                     </div>
-                  </div>
+                  )}
                 </div>
 
                 <div className="flex items-center gap-2 text-slate-400 text-xs font-bold pt-6 border-t border-slate-50">
@@ -270,23 +256,34 @@ const Agents: React.FC = () => {
 
                 {isAdmin && user.email !== 'miasaatrany@gmail.com' && user.uid !== currentUser?.uid && (
                   <div className="flex flex-wrap gap-2 mt-6 pt-4 border-t border-slate-100">
-                    {user.role === 'agent' ? (
+                    {user.role !== 'admin' && (
                       <button
                         onClick={() => handleUpdateRole(user.uid, 'admin')}
                         disabled={actionLoading === user.uid}
                         className="btn-info !px-4 !py-2 !text-[10px] flex-1"
                       >
                         <Shield size={16} />
-                        Promouvoir Admin
+                        Admin
                       </button>
-                    ) : (
+                    )}
+                    {user.role !== 'agent' && (
                       <button
                         onClick={() => handleUpdateRole(user.uid, 'agent')}
                         disabled={actionLoading === user.uid}
                         className="btn-secondary !px-4 !py-2 !text-[10px] flex-1"
                       >
                         <ShieldAlert size={16} />
-                        Rétrograder Agent
+                        Agent
+                      </button>
+                    )}
+                    {user.role !== 'caissier' && (
+                      <button
+                        onClick={() => handleUpdateRole(user.uid, 'caissier')}
+                        disabled={actionLoading === user.uid}
+                        className="btn-info !px-4 !py-2 !text-[10px] flex-1 !bg-amber-600 hover:!bg-amber-700"
+                      >
+                        <ShoppingCart size={16} />
+                        Caissier
                       </button>
                     )}
                     <button

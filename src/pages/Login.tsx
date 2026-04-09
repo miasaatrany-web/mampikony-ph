@@ -1,12 +1,13 @@
 import React, { useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../components/AuthProvider';
-import { Package, Mail, Lock, AlertCircle, ArrowRight } from 'lucide-react';
+import { Package, Mail, Lock, AlertCircle, ArrowRight, Eye, EyeOff } from 'lucide-react';
 import { cn } from '../lib/utils';
 
 const Login: React.FC = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
@@ -69,7 +70,7 @@ const Login: React.FC = () => {
           <div className="bg-white w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 shadow-lg">
             <Package className="text-brand-600" size={32} />
           </div>
-          <h1 className="text-2xl font-bold text-white tracking-tight">Pharmacie Mampikony</h1>
+          <h1 className="text-2xl font-bold text-white tracking-tight">Tselatra</h1>
           <p className="text-brand-100 mt-1 font-medium">Accédez à votre espace de gestion</p>
         </div>
 
@@ -115,7 +116,7 @@ const Login: React.FC = () => {
                   required
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="w-full pl-10 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all outline-none"
+                  className="w-full pl-10 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-brand-500 focus:border-transparent transition-all outline-none"
                   placeholder="votre@email.com"
                 />
               </div>
@@ -126,18 +127,25 @@ const Login: React.FC = () => {
               <div className="relative">
                 <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
                 <input
-                  type="password"
+                  type={showPassword ? "text" : "password"}
                   required
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="w-full pl-10 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all outline-none"
+                  className="w-full pl-10 pr-12 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-brand-500 focus:border-transparent transition-all outline-none"
                   placeholder="••••••••"
                 />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
+                >
+                  {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                </button>
               </div>
             </div>
 
             <div className="flex items-center justify-between text-sm">
-              <Link to="/forgot-password" title="Mot de passe oublié ?" className="text-green-600 hover:text-green-700 font-medium">
+              <Link to="/forgot-password" title="Mot de passe oublié ?" className="text-brand-600 hover:text-brand-700 font-medium">
                 Mot de passe oublié ?
               </Link>
             </div>
@@ -201,7 +209,7 @@ const Login: React.FC = () => {
           <div className="mt-8 pt-6 border-t border-gray-100 text-center">
             <p className="text-gray-600 text-sm">
               Nouveau ici ?{' '}
-              <Link to="/register" className="text-green-600 hover:text-green-700 font-bold">
+              <Link to="/register" className="text-brand-600 hover:text-brand-700 font-bold">
                 Créer un compte
               </Link>
             </p>

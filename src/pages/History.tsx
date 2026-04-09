@@ -2,55 +2,135 @@ import React, { useEffect, useState } from 'react';
 import { api } from '../api';
 import { Sale } from '../types';
 import { useAuth } from '../components/AuthProvider';
-import { db, collection, query, onSnapshot, handleFirestoreError, OperationType } from '../firebase';
-import { History as HistoryIcon, Search, CheckCircle2, Clock, Trash2, FileText, X, User, DollarSign, Calendar, ArrowLeft, Plus, PlusCircle, Send } from 'lucide-react';
+import { History as HistoryIcon, Search, CheckCircle2, Clock, Trash2, FileText, X, User, DollarSign, Calendar, ArrowLeft, Plus, PlusCircle, Send, Download, Filter } from 'lucide-react';
 import { cn } from '../lib/utils';
-import { format } from 'date-fns';
+import { format, isToday, isYesterday, startOfWeek, endOfWeek, startOfMonth, endOfMonth, startOfYear, endOfYear, isWithinInterval, subWeeks, subMonths } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { Link } from 'react-router-dom';
+import { jsPDF } from 'jspdf';
+import 'jspdf-autotable';
+
+type Period = 'all' | 'today' | 'yesterday' | 'this_week' | 'last_week' | 'this_month' | 'last_month' | 'this_year';
 
 const History: React.FC = () => {
-  const { isAdmin, isAgent } = useAuth();
+  const { user, isAdmin, isAgent, isCashier } = useAuth();
   const [sales, setSales] = useState<Sale[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
+  const [selectedPeriod, setSelectedPeriod] = useState<Period>('all');
   const [selectedSale, setSelectedSale] = useState<Sale | null>(null);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [saleToDelete, setSaleToDelete] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [transmittingIds, setTransmittingIds] = useState<string[]>([]);
   const [validatingIds, setValidatingIds] = useState<string[]>([]);
+  const [isClearAllModalOpen, setIsClearAllModalOpen] = useState(false);
+
+  const fetchSales = async () => {
+    setLoading(true);
+    try {
+      const data = await api.sales.list();
+      setSales(data.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()));
+    } catch (error) {
+      console.error('Error fetching sales:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    setLoading(true);
-    const path = 'sales';
-    const q = query(collection(db, path));
-    
-    const unsubscribe = onSnapshot(q, (snapshot) => {
-      const salesData = snapshot.docs.map(doc => doc.data() as Sale);
-      setSales(salesData.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()));
-      setLoading(false);
-    }, (error) => {
-      handleFirestoreError(error, OperationType.LIST, path);
-      setLoading(false);
-    });
-
-    return () => unsubscribe();
+    fetchSales();
   }, []);
 
-  const filteredSales = sales.filter(s =>
-    (s.customerName?.toLowerCase() || '').includes(searchTerm.toLowerCase()) ||
-    s.id.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const filteredSales = sales.filter(s => {
+    const matchesSearch = (s.customerName?.toLowerCase() || '').includes(searchTerm.toLowerCase()) ||
+      s.id.toLowerCase().includes(searchTerm.toLowerCase());
+    
+    if (!matchesSearch) return false;
+
+    const date = new Date(s.createdAt);
+    const now = new Date();
+
+    switch (selectedPeriod) {
+      case 'today':
+        return isToday(date);
+      case 'yesterday':
+        return isYesterday(date);
+      case 'this_week':
+        return isWithinInterval(date, { start: startOfWeek(now, { weekStartsOn: 1 }), end: endOfWeek(now, { weekStartsOn: 1 }) });
+      case 'last_week':
+        const lastWeek = subWeeks(now, 1);
+        return isWithinInterval(date, { start: startOfWeek(lastWeek, { weekStartsOn: 1 }), end: endOfWeek(lastWeek, { weekStartsOn: 1 }) });
+      case 'this_month':
+        return isWithinInterval(date, { start: startOfMonth(now), end: endOfMonth(now) });
+      case 'last_month':
+        const lastMonth = subMonths(now, 1);
+        return isWithinInterval(date, { start: startOfMonth(lastMonth), end: endOfMonth(lastMonth) });
+      case 'this_year':
+        return isWithinInterval(date, { start: startOfYear(now), end: endOfYear(now) });
+      default:
+        return true;
+    }
+  });
+
+  const handleExportPDF = (sale: Sale) => {
+    const doc = new jsPDF();
+    
+    // Header
+    doc.setFontSize(22);
+    doc.setTextColor(40, 40, 40);
+    doc.text('FACTURE PHARMACIE', 105, 20, { align: 'center' });
+    
+    doc.setFontSize(10);
+    doc.text(`Facture #: ${sale.id.toUpperCase()}`, 20, 40);
+    doc.text(`Date: ${format(new Date(sale.createdAt), 'dd/MM/yyyy HH:mm')}`, 20, 45);
+    doc.text(`Client: ${sale.customerName || 'Client Anonyme'}`, 20, 50);
+    doc.text(`Agent: ${sale.agentName || 'N/A'}`, 20, 55);
+    if (sale.cashierName) {
+      doc.text(`Caissier: ${sale.cashierName}`, 20, 60);
+    }
+
+    // Table
+    const tableData = sale.items.map(item => [
+      item.productName,
+      item.quantity.toString(),
+      `${item.price.toLocaleString()} Ar`,
+      `${(item.price * item.quantity).toLocaleString()} Ar`
+    ]);
+
+    (doc as any).autoTable({
+      startY: 70,
+      head: [['Produit', 'Quantité', 'Prix Unitaire', 'Total']],
+      body: tableData,
+      theme: 'grid',
+      headStyles: { fillColor: [79, 70, 229] }, // brand-600
+    });
+
+    const finalY = (doc as any).lastAutoTable.finalY || 70;
+    
+    doc.setFontSize(14);
+    doc.setFont('helvetica', 'bold');
+    doc.text(`TOTAL: ${sale.total.toLocaleString()} Ar`, 190, finalY + 20, { align: 'right' });
+    
+    doc.setFontSize(10);
+    doc.setFont('helvetica', 'normal');
+    doc.text('Merci de votre confiance !', 105, finalY + 40, { align: 'center' });
+
+    doc.save(`Facture_${sale.id.slice(-6)}.pdf`);
+  };
 
   const handleValidatePayment = async (id: string) => {
     if (window.confirm('Voulez-vous confirmer le paiement de cette vente ?')) {
       setValidatingIds(prev => [...prev, id]);
-      console.log('Validating payment for sale:', id);
       try {
-        await api.sales.update(id, { status: 'paid' });
+        await api.sales.update(id, { 
+          status: 'paid',
+          cashierId: user?.uid,
+          cashierName: user?.displayName
+        });
         if (selectedSale?.id === id) {
-          setSelectedSale(prev => prev ? { ...prev, status: 'paid' } : null);
+          setSelectedSale(prev => prev ? { ...prev, status: 'paid', cashierId: user?.uid, cashierName: user?.displayName } : null);
         }
+        fetchSales();
         alert('Vente validée avec succès !');
       } catch (err) {
         console.error('Error validating payment:', err);
@@ -97,6 +177,18 @@ const History: React.FC = () => {
     setIsDeleteModalOpen(true);
   };
 
+  const handleClearAllHistory = async () => {
+    try {
+      await api.sales.deleteAll();
+      setIsClearAllModalOpen(false);
+      fetchSales();
+      alert('Tout l\'historique a été effacé avec succès.');
+    } catch (err) {
+      console.error(err);
+      alert('Erreur lors de la suppression de l\'historique.');
+    }
+  };
+
   const confirmDelete = async () => {
     if (!saleToDelete) return;
     try {
@@ -104,6 +196,7 @@ const History: React.FC = () => {
       setIsDeleteModalOpen(false);
       setSaleToDelete(null);
       setSelectedSale(null);
+      fetchSales();
     } catch (err) {
       console.error(err);
       alert('Erreur lors de la suppression.');
@@ -136,6 +229,17 @@ const History: React.FC = () => {
             </div>
             Nouvelle Vente
           </Link>
+          {isAdmin && (
+            <button
+              onClick={() => setIsClearAllModalOpen(true)}
+              className="bg-rose-600 text-white font-black py-5 px-8 rounded-[2rem] flex items-center gap-4 hover:bg-rose-500 transition-all shadow-2xl shadow-rose-600/40 active:scale-95 text-xl group"
+            >
+              <div className="bg-white/20 p-2 rounded-xl group-hover:scale-110 transition-transform">
+                <Trash2 size={28} />
+              </div>
+              Tout Effacer
+            </button>
+          )}
           {isAgent && !isAdmin && (
             <button
               onClick={handleTransmitAll}
@@ -150,8 +254,8 @@ const History: React.FC = () => {
         </div>
       </header>
 
-      {/* Search */}
-      <div className="bg-white p-6 rounded-3xl shadow-sm border border-slate-100">
+      {/* Search & Filters */}
+      <div className="bg-white p-6 rounded-3xl shadow-sm border border-slate-100 space-y-6">
         <div className="relative">
           <Search className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-400" size={24} />
           <input
@@ -161,6 +265,36 @@ const History: React.FC = () => {
             onChange={(e) => setSearchTerm(e.target.value)}
             className="w-full pl-14 pr-6 py-5 bg-slate-50 border-none rounded-2xl focus:ring-2 focus:ring-brand-500 font-medium text-lg placeholder:text-slate-400 transition-all"
           />
+        </div>
+
+        <div className="flex flex-wrap items-center gap-3">
+          <div className="flex items-center gap-2 mr-4 text-slate-400">
+            <Filter size={18} />
+            <span className="text-[10px] font-black uppercase tracking-widest">Période:</span>
+          </div>
+          {[
+            { id: 'all', label: 'Tout' },
+            { id: 'today', label: "Aujourd'hui" },
+            { id: 'yesterday', label: 'Hier' },
+            { id: 'this_week', label: 'Cette Semaine' },
+            { id: 'last_week', label: 'Semaine Dernière' },
+            { id: 'this_month', label: 'Ce Mois' },
+            { id: 'last_month', label: 'Mois Dernier' },
+            { id: 'this_year', label: 'Cette Année' },
+          ].map((period) => (
+            <button
+              key={period.id}
+              onClick={() => setSelectedPeriod(period.id as Period)}
+              className={cn(
+                "px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all",
+                selectedPeriod === period.id 
+                  ? "bg-slate-900 text-white shadow-lg" 
+                  : "bg-slate-50 text-slate-500 hover:bg-slate-100"
+              )}
+            >
+              {period.label}
+            </button>
+          ))}
         </div>
       </div>
 
@@ -174,7 +308,7 @@ const History: React.FC = () => {
                 <th className="px-8 py-6 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Client</th>
                 {isAdmin && <th className="px-8 py-6 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Agent</th>}
                 <th className="px-8 py-6 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Date</th>
-                <th className="px-8 py-6 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Total</th>
+                {(isAdmin || isCashier) && <th className="px-8 py-6 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Total</th>}
                 <th className="px-8 py-6 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Statut</th>
                 <th className="px-8 py-6 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] text-right">Actions</th>
               </tr>
@@ -216,9 +350,11 @@ const History: React.FC = () => {
                         <span className="text-[10px] text-slate-400 font-black uppercase tracking-widest">{format(new Date(sale.createdAt), 'HH:mm')}</span>
                       </div>
                     </td>
-                    <td className="px-8 py-6">
-                      <span className="font-black text-brand-600 text-lg">{sale.total.toLocaleString()} Ar</span>
-                    </td>
+                    {(isAdmin || isCashier) && (
+                      <td className="px-8 py-6">
+                        <span className="font-black text-brand-600 text-lg">{sale.total.toLocaleString()} Ar</span>
+                      </td>
+                    )}
                     <td className="px-8 py-6">
                       <span className={cn(
                         "px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest inline-flex items-center gap-2",
@@ -239,6 +375,14 @@ const History: React.FC = () => {
                           <FileText size={18} />
                           Détails
                         </button>
+                        <button
+                          onClick={() => handleExportPDF(sale)}
+                          className="btn-secondary !bg-brand-50 !text-brand-700 !border-brand-100 !px-3 !py-2 !text-[10px]"
+                          title="Exporter en PDF"
+                        >
+                          <Download size={18} />
+                          PDF
+                        </button>
                         {isAgent && !isAdmin && sale.status === 'pending' && (
                           <button
                             onClick={() => handleTransmit(sale.id)}
@@ -253,7 +397,7 @@ const History: React.FC = () => {
                             Envoyer
                           </button>
                         )}
-                        {isAdmin && sale.status === 'pending' && (
+                        {(isAdmin || isCashier) && sale.status === 'pending' && (
                           <button
                             onClick={() => handleValidatePayment(sale.id)}
                             disabled={validatingIds.includes(sale.id)}
@@ -268,7 +412,7 @@ const History: React.FC = () => {
                             ) : (
                               <CheckCircle2 size={16} />
                             )}
-                            Valider
+                            Confirmer
                           </button>
                         )}
                         {isAdmin && (
@@ -412,7 +556,7 @@ const History: React.FC = () => {
                     )}
                   </button>
                 )}
-                {isAdmin && selectedSale.status === 'pending' && (
+                {(isAdmin || isCashier) && selectedSale.status === 'pending' && (
                   <button
                     onClick={() => handleValidatePayment(selectedSale.id)}
                     disabled={validatingIds.includes(selectedSale.id)}
@@ -428,11 +572,18 @@ const History: React.FC = () => {
                     ) : (
                       <>
                         <CheckCircle2 size={24} />
-                        Valider le paiement
+                        Confirmer la vente
                       </>
                     )}
                   </button>
                 )}
+                <button
+                  onClick={() => handleExportPDF(selectedSale)}
+                  className="flex-1 bg-brand-600 text-white font-black py-5 rounded-2xl hover:bg-brand-500 transition-all shadow-xl shadow-brand-600/20 active:scale-95 flex items-center justify-center gap-3"
+                >
+                  <Download size={24} />
+                  Exporter PDF
+                </button>
                 <button
                   onClick={() => window.print()}
                   className="flex-1 bg-slate-900 text-white font-black py-5 rounded-2xl hover:bg-slate-800 transition-all shadow-xl active:scale-95 flex items-center justify-center gap-3"
@@ -455,6 +606,34 @@ const History: React.FC = () => {
                 className="w-full mt-4 bg-slate-100 text-slate-600 font-black py-5 rounded-2xl hover:bg-slate-200 transition-all active:scale-95 text-xl"
               >
                 Fermer
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Clear All History Modal */}
+      {isClearAllModalOpen && (
+        <div className="fixed inset-0 z-[110] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-md">
+          <div className="bg-white w-full max-w-md rounded-[2.5rem] shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-300 p-10 border border-white/20 text-center">
+            <div className="w-24 h-24 bg-rose-100 text-rose-600 rounded-[2rem] flex items-center justify-center mx-auto mb-8 shadow-lg shadow-rose-600/10">
+              <Trash2 size={48} />
+            </div>
+            <h2 className="text-3xl font-black text-slate-900 mb-3 tracking-tight">Tout effacer ?</h2>
+            <p className="text-slate-500 mb-10 font-medium">Cette action est irréversible. Êtes-vous sûr de vouloir supprimer TOUT l'historique des ventes ?</p>
+            
+            <div className="flex flex-col gap-4">
+              <button
+                onClick={handleClearAllHistory}
+                className="w-full bg-rose-600 text-white font-black py-5 rounded-2xl hover:bg-rose-500 transition-all shadow-xl shadow-rose-600/20 active:scale-95 text-lg"
+              >
+                Oui, tout supprimer
+              </button>
+              <button
+                onClick={() => setIsClearAllModalOpen(false)}
+                className="w-full bg-slate-100 text-slate-600 font-black py-5 rounded-2xl hover:bg-slate-200 transition-all active:scale-95 text-lg"
+              >
+                Annuler
               </button>
             </div>
           </div>

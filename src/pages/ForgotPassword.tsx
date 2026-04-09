@@ -32,12 +32,12 @@ const ForgotPassword: React.FC = () => {
   return (
     <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
       <div className="max-w-md w-full bg-white rounded-2xl shadow-xl overflow-hidden border border-gray-100">
-        <div className="bg-green-600 p-8 text-center">
+        <div className="bg-brand-600 p-8 text-center">
           <div className="bg-white w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 shadow-lg">
-            <Package className="text-green-600" size={32} />
+            <Package className="text-brand-600" size={32} />
           </div>
-          <h1 className="text-2xl font-bold text-white">Pharmacie Mampikony</h1>
-          <p className="text-green-100 mt-1">Récupération de mot de passe</p>
+          <h1 className="text-2xl font-bold text-white">Tselatra</h1>
+          <p className="text-brand-100 mt-1">Récupération de mot de passe</p>
         </div>
 
         <div className="p-8">
@@ -50,15 +50,15 @@ const ForgotPassword: React.FC = () => {
 
           {success ? (
             <div className="text-center space-y-6">
-              <div className="bg-green-50 border-l-4 border-green-500 p-4 flex items-start gap-3 rounded-r-lg text-left">
-                <CheckCircle2 className="text-green-500 shrink-0" size={20} />
-                <p className="text-sm text-green-700">
+              <div className="bg-brand-50 border-l-4 border-brand-500 p-4 flex items-start gap-3 rounded-r-lg text-left">
+                <CheckCircle2 className="text-brand-500 shrink-0" size={20} />
+                <p className="text-sm text-brand-700">
                   Un email de réinitialisation a été envoyé à <strong>{email}</strong>.
                 </p>
               </div>
               <Link
                 to="/login"
-                className="inline-flex items-center gap-2 text-green-600 font-bold hover:text-green-700 transition-colors"
+                className="inline-flex items-center gap-2 text-brand-600 font-bold hover:text-brand-700 transition-colors"
               >
                 <ArrowLeft size={18} />
                 Retour à la connexion
@@ -78,7 +78,7 @@ const ForgotPassword: React.FC = () => {
                     required
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    className="w-full pl-10 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all outline-none"
+                    className="w-full pl-10 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-brand-500 focus:border-transparent transition-all outline-none"
                     placeholder="votre@email.com"
                   />
                 </div>
@@ -88,7 +88,7 @@ const ForgotPassword: React.FC = () => {
                 type="submit"
                 disabled={loading}
                 className={cn(
-                  "w-full bg-green-600 text-white font-bold py-3 px-4 rounded-xl flex items-center justify-center gap-2 hover:bg-green-700 active:bg-green-800 transition-all shadow-lg shadow-green-600/20",
+                  "w-full bg-brand-600 text-white font-bold py-3 px-4 rounded-xl flex items-center justify-center gap-2 hover:bg-brand-700 active:bg-brand-800 transition-all shadow-lg shadow-brand-600/20",
                   loading && "opacity-70 cursor-not-allowed"
                 )}
               >
@@ -102,7 +102,7 @@ const ForgotPassword: React.FC = () => {
               <div className="text-center">
                 <Link
                   to="/login"
-                  className="inline-flex items-center gap-2 text-gray-500 text-sm font-medium hover:text-green-600 transition-colors"
+                  className="inline-flex items-center gap-2 text-gray-500 text-sm font-medium hover:text-brand-600 transition-colors"
                 >
                   <ArrowLeft size={16} />
                   Retour à la connexion

@@ -1,4 +1,4 @@
-import { UserProfile, Product, Sale, UserRole } from './types';
+import { UserProfile, Product, Sale, UserRole, InventoryLog } from './types';
 import { 
   db, 
   auth, 
@@ -15,37 +15,33 @@ import {
   handleFirestoreError,
   OperationType
 } from './firebase';
+import { writeBatch } from 'firebase/firestore';
 
 export const api = {
   auth: {
     me: async () => {
-      const user = auth.currentUser;
-      if (!user) return null;
-      
-      const path = `users/${user.uid}`;
+      if (!auth.currentUser) return null;
       try {
-        const userDoc = await getDoc(doc(db, path));
-        if (userDoc.exists()) {
-          return userDoc.data() as UserProfile;
-        }
-        return null;
+        const userDoc = await getDoc(doc(db, 'users', auth.currentUser.uid));
+        return userDoc.exists() ? userDoc.data() as UserProfile : null;
       } catch (error) {
-        handleFirestoreError(error, OperationType.GET, path);
+        handleFirestoreError(error, OperationType.GET, `users/${auth.currentUser.uid}`);
         return null;
       }
     },
     list: async () => {
-      const path = 'users';
       try {
-        const querySnapshot = await getDocs(collection(db, path));
-        const users = querySnapshot.docs.map(doc => doc.data() as UserProfile);
+        const usersSnap = await getDocs(collection(db, 'users'));
+        const users = usersSnap.docs.map(doc => doc.data() as UserProfile);
         
-        // Fetch sales to calculate stats
-        const salesSnapshot = await getDocs(collection(db, 'sales'));
-        const sales = salesSnapshot.docs.map(doc => doc.data() as Sale);
+        const salesSnap = await getDocs(collection(db, 'sales'));
+        const sales = salesSnap.docs.map(doc => doc.data() as Sale);
         
         return users.map(user => {
-          const userSales = sales.filter(s => s.agentId === user.uid);
+          const userSales = sales.filter(s => 
+            (s.cashierId === user.uid) || 
+            (!s.cashierId && s.agentId === user.uid && s.status === 'paid')
+          );
           return {
             ...user,
             salesCount: userSales.length,
@@ -53,153 +49,205 @@ export const api = {
           };
         });
       } catch (error) {
-        handleFirestoreError(error, OperationType.LIST, path);
+        handleFirestoreError(error, OperationType.LIST, 'users');
         return [];
       }
     },
-    approve: async (id: string) => {
-      const path = `users/${id}`;
+    approve: async (uid: string) => {
       try {
-        await updateDoc(doc(db, path), { approved: true });
+        await updateDoc(doc(db, 'users', uid), { approved: true });
       } catch (error) {
-        handleFirestoreError(error, OperationType.UPDATE, path);
+        handleFirestoreError(error, OperationType.UPDATE, `users/${uid}`);
       }
     },
-    delete: async (id: string) => {
-      const path = `users/${id}`;
+    delete: async (uid: string) => {
       try {
-        await deleteDoc(doc(db, path));
+        await deleteDoc(doc(db, 'users', uid));
       } catch (error) {
-        handleFirestoreError(error, OperationType.DELETE, path);
+        handleFirestoreError(error, OperationType.DELETE, `users/${uid}`);
       }
     },
-    updateRole: async (id: string, role: UserRole) => {
-      const path = `users/${id}`;
+    updateRole: async (uid: string, role: UserRole) => {
       try {
-        await updateDoc(doc(db, path), { role });
+        await updateDoc(doc(db, 'users', uid), { role });
       } catch (error) {
-        handleFirestoreError(error, OperationType.UPDATE, path);
+        handleFirestoreError(error, OperationType.UPDATE, `users/${uid}`);
       }
     },
+    login: async (data: any) => {
+      // This is now handled by Firebase Auth directly in AuthProvider
+      return null;
+    },
+    register: async (data: any) => {
+      // This is now handled by Firebase Auth directly in AuthProvider
+      return null;
+    }
   },
   products: {
     list: async () => {
-      const path = 'products';
       try {
-        const querySnapshot = await getDocs(collection(db, path));
-        return querySnapshot.docs.map(doc => doc.data() as Product);
+        const snap = await getDocs(collection(db, 'products'));
+        return snap.docs.map(doc => doc.data() as Product);
       } catch (error) {
-        handleFirestoreError(error, OperationType.LIST, path);
+        handleFirestoreError(error, OperationType.LIST, 'products');
         return [];
       }
     },
     create: async (data: Partial<Product>) => {
       const id = Date.now().toString();
-      const path = `products/${id}`;
       const product = { ...data, id, updatedAt: new Date().toISOString() } as Product;
       try {
-        await setDoc(doc(db, path), product);
+        await setDoc(doc(db, 'products', id), product);
         return product;
       } catch (error) {
-        handleFirestoreError(error, OperationType.CREATE, path);
-        return null;
+        handleFirestoreError(error, OperationType.CREATE, `products/${id}`);
+        throw error;
       }
     },
     update: async (id: string, data: Partial<Product>) => {
-      const path = `products/${id}`;
-      const updateData = { ...data, updatedAt: new Date().toISOString() };
       try {
-        await updateDoc(doc(db, path), updateData);
-        return updateData;
+        await updateDoc(doc(db, 'products', id), { ...data, updatedAt: new Date().toISOString() });
       } catch (error) {
-        handleFirestoreError(error, OperationType.UPDATE, path);
-        return null;
+        handleFirestoreError(error, OperationType.UPDATE, `products/${id}`);
       }
     },
     delete: async (id: string) => {
-      const path = `products/${id}`;
       try {
-        await deleteDoc(doc(db, path));
+        await deleteDoc(doc(db, 'products', id));
       } catch (error) {
-        handleFirestoreError(error, OperationType.DELETE, path);
+        handleFirestoreError(error, OperationType.DELETE, `products/${id}`);
+      }
+    },
+    resetQuantities: async () => {
+      try {
+        const snap = await getDocs(collection(db, 'products'));
+        const batch = writeBatch(db);
+        snap.docs.forEach(d => {
+          batch.update(d.ref, { totalQuantityPillules: 0, pharmacyQuantityPillules: 0, updatedAt: new Date().toISOString() });
+        });
+        await batch.commit();
+      } catch (error) {
+        handleFirestoreError(error, OperationType.UPDATE, 'products');
+      }
+    },
+    clearPharmacy: async () => {
+      try {
+        const snap = await getDocs(collection(db, 'products'));
+        const batch = writeBatch(db);
+        snap.docs.forEach(d => {
+          batch.update(d.ref, { pharmacyQuantityPillules: 0, showInPharmacy: false, updatedAt: new Date().toISOString() });
+        });
+        await batch.commit();
+      } catch (error) {
+        handleFirestoreError(error, OperationType.UPDATE, 'products');
+      }
+    },
+    resetPurchasePrices: async () => {
+      try {
+        const snap = await getDocs(collection(db, 'products'));
+        const batch = writeBatch(db);
+        snap.docs.forEach(d => {
+          batch.update(d.ref, { 
+            purchasePriceBoite: 0, 
+            purchasePricePlaquette: 0, 
+            purchasePricePillule: 0, 
+            updatedAt: new Date().toISOString() 
+          });
+        });
+        await batch.commit();
+      } catch (error) {
+        handleFirestoreError(error, OperationType.UPDATE, 'products');
       }
     },
     deleteAll: async () => {
-      const path = 'products';
       try {
-        const querySnapshot = await getDocs(collection(db, path));
-        const deletePromises = querySnapshot.docs.map(doc => deleteDoc(doc.ref));
-        await Promise.all(deletePromises);
+        const snap = await getDocs(collection(db, 'products'));
+        const batch = writeBatch(db);
+        snap.docs.forEach(d => batch.delete(d.ref));
+        await batch.commit();
       } catch (error) {
-        handleFirestoreError(error, OperationType.DELETE, path);
+        handleFirestoreError(error, OperationType.DELETE, 'products');
       }
     },
   },
   sales: {
     list: async () => {
-      const path = 'sales';
       try {
-        const querySnapshot = await getDocs(collection(db, path));
-        return querySnapshot.docs.map(doc => doc.data() as Sale);
+        const snap = await getDocs(collection(db, 'sales'));
+        return snap.docs.map(doc => doc.data() as Sale);
       } catch (error) {
-        handleFirestoreError(error, OperationType.LIST, path);
+        handleFirestoreError(error, OperationType.LIST, 'sales');
         return [];
       }
     },
     create: async (data: Partial<Sale>) => {
       const id = Date.now().toString();
-      const path = `sales/${id}`;
-      const sale = { ...data, id, createdAt: new Date().toISOString() } as Sale;
+      const createdAt = new Date().toISOString();
+      const sale = { ...data, id, createdAt } as Sale;
       try {
-        await setDoc(doc(db, path), sale);
-        
-        // Decrement stock for each item
-        if (data.items) {
-          for (const item of data.items) {
-            const productRef = doc(db, `products/${item.productId}`);
-            const productSnap = await getDoc(productRef);
-            if (productSnap.exists()) {
-              const currentQty = productSnap.data().quantity || 0;
-              await updateDoc(productRef, {
-                quantity: Math.max(0, currentQty - item.quantity)
-              });
-            }
-          }
-        }
-        
+        await setDoc(doc(db, 'sales', id), sale);
         return sale;
       } catch (error) {
-        handleFirestoreError(error, OperationType.CREATE, path);
-        return null;
+        handleFirestoreError(error, OperationType.CREATE, `sales/${id}`);
+        throw error;
       }
     },
     update: async (id: string, data: Partial<Sale>) => {
-      const path = `sales/${id}`;
       try {
-        await updateDoc(doc(db, path), data);
-        return data;
+        await updateDoc(doc(db, 'sales', id), data);
       } catch (error) {
-        handleFirestoreError(error, OperationType.UPDATE, path);
-        return null;
+        handleFirestoreError(error, OperationType.UPDATE, `sales/${id}`);
       }
     },
     delete: async (id: string) => {
-      const path = `sales/${id}`;
       try {
-        await deleteDoc(doc(db, path));
+        await deleteDoc(doc(db, 'sales', id));
       } catch (error) {
-        handleFirestoreError(error, OperationType.DELETE, path);
+        handleFirestoreError(error, OperationType.DELETE, `sales/${id}`);
       }
     },
     deleteAll: async () => {
-      const path = 'sales';
       try {
-        const querySnapshot = await getDocs(collection(db, path));
-        const deletePromises = querySnapshot.docs.map(doc => deleteDoc(doc.ref));
-        await Promise.all(deletePromises);
+        const snap = await getDocs(collection(db, 'sales'));
+        const batch = writeBatch(db);
+        snap.docs.forEach(d => batch.delete(d.ref));
+        await batch.commit();
       } catch (error) {
-        handleFirestoreError(error, OperationType.DELETE, path);
+        handleFirestoreError(error, OperationType.DELETE, 'sales');
       }
     },
   },
+  inventoryLogs: {
+    list: async () => {
+      try {
+        const snap = await getDocs(collection(db, 'inventory-logs'));
+        return snap.docs.map(doc => doc.data() as InventoryLog);
+      } catch (error) {
+        handleFirestoreError(error, OperationType.LIST, 'inventory-logs');
+        return [];
+      }
+    },
+    create: async (data: any) => {
+      const id = Math.random().toString(36).substring(2, 11);
+      const createdAt = new Date().toISOString();
+      const log = { ...data, id, createdAt };
+      try {
+        await setDoc(doc(db, 'inventory-logs', id), log);
+        return log;
+      } catch (error) {
+        handleFirestoreError(error, OperationType.CREATE, `inventory-logs/${id}`);
+        throw error;
+      }
+    },
+    deleteAll: async () => {
+      try {
+        const snap = await getDocs(collection(db, 'inventory-logs'));
+        const batch = writeBatch(db);
+        snap.docs.forEach(d => batch.delete(d.ref));
+        await batch.commit();
+      } catch (error) {
+        handleFirestoreError(error, OperationType.DELETE, 'inventory-logs');
+      }
+    }
+  }
 };

@@ -16,23 +16,49 @@
 // Document ID: {productId}
 // Fields:
 //   - id: string (required)
-//   - name: string (required, size < 100)
-//   - price: number (required, positive)
-//   - quantity: number (required)
-//   - expirationDate: string (required, ISO 8601)
-//   - lowStockThreshold: number (optional)
+//   - name: string (required)
+//   - priceBoite: number
+//   - pricePlaquette: number
+//   - pricePillule: number
+//   - purchasePriceBoite: number
+//   - purchasePricePlaquette: number
+//   - purchasePricePillule: number
+//   - packsPerBox: number
+//   - pillsPerPack: number
+//   - totalQuantityPillules: number (required)
+//   - pharmacyQuantityPillules: number
+//   - lowStockThresholdPillules: number
+//   - source: string
+//   - grossisteName: string
+//   - showInPharmacy: boolean
+//   - showInStock: boolean
 //   - updatedAt: string (required, ISO 8601)
 //
 // Collection: sales
 // Document ID: {saleId}
 // Fields:
 //   - id: string (required)
-//   - customerName: string (optional, size < 100)
-//   - items: list (required, max size 50)
-//   - total: number (required, positive)
+//   - customerName: string
+//   - items: list (required)
+//   - total: number (required)
 //   - agentId: string (required)
-//   - agentName: string (optional)
+//   - agentName: string
+//   - cashierId: string
+//   - cashierName: string
 //   - status: string (required, 'pending' or 'paid')
+//   - createdAt: string (required, ISO 8601)
+//
+// Collection: inventory-logs
+// Document ID: {logId}
+// Fields:
+//   - id: string (required)
+//   - productId: string (required)
+//   - productName: string (required)
+//   - type: string (required)
+//   - quantityPillules: number (required)
+//   - details: string
+//   - userId: string (required)
+//   - userName: string
 //   - createdAt: string (required, ISO 8601)
 //
 // ===============================================================
@@ -82,29 +108,37 @@ service cloud.firestore {
       return data.keys().hasAll(['uid', 'email', 'role', 'approved', 'createdAt']) &&
              data.uid is string &&
              data.email is string && isValidEmail(data.email) &&
-             data.role in ['admin', 'agent'] &&
+             data.role in ['admin', 'agent', 'caissier'] &&
              data.approved is bool &&
-             isValidDateString(data.createdAt) &&
-             (!('displayName' in data) || (data.displayName is string && data.displayName.size() < 100));
+             isValidDateString(data.createdAt);
     }
 
     function isValidProduct(data) {
-      return data.keys().hasAll(['id', 'name', 'price', 'quantity', 'expirationDate', 'updatedAt']) &&
+      return data.keys().hasAll(['id', 'name', 'totalQuantityPillules', 'updatedAt']) &&
              data.id is string &&
-             data.name is string && data.name.size() > 0 && data.name.size() < 100 &&
-             data.price is number && data.price >= 0 &&
-             data.quantity is number &&
-             isValidDateString(data.expirationDate) &&
+             data.name is string && data.name.size() > 0 &&
+             data.totalQuantityPillules is number &&
              isValidDateString(data.updatedAt);
     }
 
     function isValidSale(data) {
       return data.keys().hasAll(['id', 'items', 'total', 'agentId', 'status', 'createdAt']) &&
              data.id is string &&
-             data.items is list && data.items.size() <= 50 &&
-             data.total is number && data.total >= 0 &&
+             data.items is list &&
+             data.total is number &&
              data.agentId is string &&
              data.status in ['pending', 'paid'] &&
+             isValidDateString(data.createdAt);
+    }
+
+    function isValidLog(data) {
+      return data.keys().hasAll(['id', 'productId', 'productName', 'type', 'quantityPillules', 'userId', 'createdAt']) &&
+             data.id is string &&
+             data.productId is string &&
+             data.productName is string &&
+             data.type in ['addition', 'transfer_to_pharmacy', 'return_to_stock', 'stock_exit'] &&
+             data.quantityPillules is number &&
+             data.userId is string &&
              isValidDateString(data.createdAt);
     }
 
@@ -113,44 +147,33 @@ service cloud.firestore {
     // ===============================================================
 
     match /users/{userId} {
-      // Allow read if owner or admin
-      allow read: if isOwner(userId) || isAdmin();
-      
-      // Allow create if authenticated and valid data
-      // New users are not approved by default unless they are the hardcoded admin
+      allow read: if isApproved();
       allow create: if isAuthenticated() && isValidUser(request.resource.data) && 
                     isOwner(userId) && 
                     (request.resource.data.approved == false || request.auth.token.email == "miasaatrany@gmail.com");
-      
-      // Allow update if admin or owner (but owner cannot change role or approved status)
       allow update: if isAuthenticated() && isValidUser(request.resource.data) && 
                     (isAdmin() || (isOwner(userId) && 
                                    request.resource.data.role == resource.data.role && 
                                    request.resource.data.approved == resource.data.approved));
-      
       allow delete: if isAdmin();
     }
 
     match /products/{productId} {
-      // Allow read if approved user
       allow read: if isApproved();
-      
-      // Allow write if approved user (agent or admin)
       allow create, update: if isApproved() && isValidProduct(request.resource.data);
       allow delete: if isAdmin();
     }
 
     match /sales/{saleId} {
-      // Allow read if approved user
       allow read: if isApproved();
-      
-      // Allow create if approved user
-      allow create: if isApproved() && isValidSale(request.resource.data) && 
-                    request.resource.data.agentId == request.auth.uid;
-      
-      // Allow update if approved user
+      allow create: if isApproved() && isValidSale(request.resource.data);
       allow update: if isApproved() && isValidSale(request.resource.data);
-      
+      allow delete: if isAdmin();
+    }
+
+    match /inventory-logs/{logId} {
+      allow read: if isApproved();
+      allow create: if isApproved() && isValidLog(request.resource.data);
       allow delete: if isAdmin();
     }
   }

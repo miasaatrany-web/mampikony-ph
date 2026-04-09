@@ -6,16 +6,17 @@ interface AuthGuardProps {
   children: React.ReactNode;
   requireAdmin?: boolean;
   requireAgent?: boolean;
+  requireCashier?: boolean;
 }
 
-const AuthGuard: React.FC<AuthGuardProps> = ({ children, requireAdmin, requireAgent }) => {
-  const { user, loading, isAdmin, isAgent } = useAuth();
+const AuthGuard: React.FC<AuthGuardProps> = ({ children, requireAdmin, requireAgent, requireCashier }) => {
+  const { user, loading, isAdmin, isAgent, isCashier } = useAuth();
   const location = useLocation();
 
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600"></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-brand-600"></div>
       </div>
     );
   }
@@ -28,7 +29,12 @@ const AuthGuard: React.FC<AuthGuardProps> = ({ children, requireAdmin, requireAg
     return <Navigate to="/" replace />;
   }
 
-  if (requireAgent && !isAgent) {
+  const hasRequiredRole = 
+    (!requireAgent && !requireCashier) || 
+    (requireAgent && isAgent) || 
+    (requireCashier && isCashier);
+
+  if (!hasRequiredRole && !isAdmin) {
     return <Navigate to="/" replace />;
   }
 

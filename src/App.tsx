@@ -13,6 +13,9 @@ import Stock from './pages/Stock';
 import POS from './pages/POS';
 import History from './pages/History';
 import Agents from './pages/Agents';
+import PurchasePrices from './pages/PurchasePrices';
+import Pharmacy from './pages/Pharmacy';
+import InventoryHistory from './pages/InventoryHistory';
 
 export default function App() {
   return (
@@ -38,7 +41,7 @@ export default function App() {
           <Route
             path="/stock"
             element={
-              <AuthGuard requireAgent>
+              <AuthGuard requireAgent requireCashier>
                 <Layout>
                   <Stock />
                 </Layout>
@@ -46,9 +49,29 @@ export default function App() {
             }
           />
           <Route
+            path="/pharmacie"
+            element={
+              <AuthGuard requireAgent requireCashier>
+                <Layout>
+                  <Pharmacy />
+                </Layout>
+              </AuthGuard>
+            }
+          />
+          <Route
+            path="/inventory-history"
+            element={
+              <AuthGuard requireAgent requireCashier>
+                <Layout>
+                  <InventoryHistory />
+                </Layout>
+              </AuthGuard>
+            }
+          />
+          <Route
             path="/pos"
             element={
-              <AuthGuard requireAgent>
+              <AuthGuard requireAgent requireCashier>
                 <Layout>
                   <POS />
                 </Layout>
@@ -58,9 +81,19 @@ export default function App() {
           <Route
             path="/history"
             element={
-              <AuthGuard>
+              <AuthGuard requireAgent requireCashier>
                 <Layout>
                   <History />
+                </Layout>
+              </AuthGuard>
+            }
+          />
+          <Route
+            path="/purchase-prices"
+            element={
+              <AuthGuard requireAdmin>
+                <Layout>
+                  <PurchasePrices />
                 </Layout>
               </AuthGuard>
             }

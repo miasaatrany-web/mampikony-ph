@@ -2,16 +2,30 @@ import React from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from './AuthProvider';
 import { api } from '../api';
-import { LayoutDashboard, Package, ShoppingCart, History, LogOut, User as UserIcon, Menu, X, Plus, PlusCircle, Users } from 'lucide-react';
+import { LayoutDashboard, Package, ShoppingCart, History, LogOut, User as UserIcon, Menu, X, Plus, PlusCircle, Users, Clock } from 'lucide-react';
 import { cn } from '../lib/utils';
 import { db, collection, query, onSnapshot } from '../firebase';
 
 const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const { user, isAdmin, isAgent, logout } = useAuth();
+  const { user, isAdmin, isAgent, isCashier, logout } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = React.useState(false);
   const [pendingCount, setPendingCount] = React.useState(0);
+  const [isOffline, setIsOffline] = React.useState(!navigator.onLine);
+
+  React.useEffect(() => {
+    const handleOnline = () => setIsOffline(false);
+    const handleOffline = () => setIsOffline(true);
+
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
+
+    return () => {
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
+    };
+  }, []);
 
   React.useEffect(() => {
     if (isAdmin) {
@@ -36,9 +50,12 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
 
   const navItems = [
     { label: 'Tableau de bord', path: '/', icon: LayoutDashboard, show: true },
-    { label: 'Nouvelle Vente', path: '/pos', icon: ShoppingCart, show: isAgent },
-    { label: 'Stock / Produits', path: '/stock', icon: Package, show: isAgent },
-    { label: 'Historique', path: '/history', icon: History, show: true },
+    { label: 'Pharmacie', path: '/pharmacie', icon: Package, show: isAgent || isCashier },
+    { label: 'Nouvelle Vente', path: '/pos', icon: ShoppingCart, show: isAgent || isCashier },
+    { label: 'Stock / Produits', path: '/stock', icon: Package, show: isAgent || isCashier },
+    { label: 'Historique Mouvements', path: '/inventory-history', icon: Clock, show: isAgent || isCashier },
+    { label: 'Prix d\'Achat', path: '/purchase-prices', icon: ShoppingCart, show: isAdmin },
+    { label: 'Historique', path: '/history', icon: History, show: isAgent || isCashier },
     { label: 'Agents', path: '/agents', icon: Users, show: isAdmin },
   ];
 
@@ -47,12 +64,17 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col md:flex-row font-sans selection:bg-brand-100 selection:text-brand-900">
       {/* Mobile Header */}
+      {isOffline && (
+        <div className="bg-amber-500 text-white text-[10px] font-black py-2 px-6 text-center uppercase tracking-[0.2em] relative z-[70] animate-pulse">
+          Vous êtes actuellement hors-ligne. Certaines fonctionnalités peuvent être indisponibles.
+        </div>
+      )}
       <div className="md:hidden bg-slate-900 text-white p-6 flex justify-between items-center shadow-2xl relative z-[60]">
         <Link to="/" className="text-2xl font-black flex items-center gap-3 tracking-tight">
           <div className="bg-brand-600 text-white p-2 rounded-xl shadow-lg shadow-brand-600/20">
             <Package size={24} />
           </div>
-          Mampikony
+          Tselatra
         </Link>
         <div className="flex items-center gap-3">
           {isAgent && (
@@ -92,7 +114,7 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
               <Package size={28} />
             </div>
             <div className="flex flex-col">
-              <span className="text-2xl font-black tracking-tighter text-slate-900 leading-none">Mampikony</span>
+              <span className="text-2xl font-black tracking-tighter text-slate-900 leading-none">Tselatra</span>
               <span className="text-[10px] font-black text-brand-600 uppercase tracking-[0.3em] mt-1">Pharmacie</span>
             </div>
           </Link>
@@ -128,7 +150,7 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
             ))}
           </nav>
 
-          {isAgent && (
+          {(isCashier || isAgent) && (
             <div className="space-y-4 mb-10">
               <p className="px-4 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-4">Actions Rapides</p>
               <Link 
@@ -141,17 +163,19 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
                 </div>
                 Nouvelle Vente
               </Link>
-              <Link 
-                to="/stock"
-                state={{ openModal: true }}
-                onClick={() => setIsMobileMenuOpen(false)}
-                className="btn-info !w-full !px-5 !py-4 !text-[10px] !rounded-2xl"
-              >
-                <div className="w-8 h-8 rounded-lg bg-white/20 flex items-center justify-center group-hover:scale-110 transition-transform">
-                  <Plus size={18} />
-                </div>
-                Ajouter Produit
-              </Link>
+              {isAgent && (
+                <Link 
+                  to="/stock"
+                  state={{ openModal: true }}
+                  onClick={() => setIsMobileMenuOpen(false)}
+                  className="btn-info !w-full !px-5 !py-4 !text-[10px] !rounded-2xl"
+                >
+                  <div className="w-8 h-8 rounded-lg bg-white/20 flex items-center justify-center group-hover:scale-110 transition-transform">
+                    <Plus size={18} />
+                  </div>
+                  Ajouter Produit
+                </Link>
+              )}
             </div>
           )}
 
@@ -180,6 +204,12 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
 
       {/* Main Content */}
       <main className="flex-1 p-6 md:p-12 overflow-auto relative">
+        {isOffline && (
+          <div className="hidden md:block mb-8 bg-amber-50 border border-amber-200 text-amber-800 p-4 rounded-2xl flex items-center gap-3 animate-in slide-in-from-top-4 duration-500">
+            <div className="w-2 h-2 rounded-full bg-amber-500 animate-pulse" />
+            <span className="text-xs font-black uppercase tracking-widest">Mode Hors-ligne : Connexion internet requise pour synchroniser les données.</span>
+          </div>
+        )}
         <div className="max-w-7xl mx-auto animate-in fade-in slide-in-from-bottom-4 duration-700">
           {children}
         </div>

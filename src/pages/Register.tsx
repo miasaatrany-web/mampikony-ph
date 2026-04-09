@@ -1,14 +1,14 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../components/AuthProvider';
-import { Package, Mail, Lock, User, AlertCircle, ArrowRight, ShieldCheck } from 'lucide-react';
+import { Package, Mail, Lock, User, AlertCircle, ArrowRight, ShieldCheck, ShoppingCart } from 'lucide-react';
 import { cn } from '../lib/utils';
 
 const Register: React.FC = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [displayName, setDisplayName] = useState('');
-  const [role, setRole] = useState<'admin' | 'agent'>('agent');
+  const [role, setRole] = useState<'admin' | 'agent' | 'caissier'>('caissier');
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [loading, setLoading] = useState(false);
@@ -46,11 +46,6 @@ const Register: React.FC = () => {
     setLoading(true);
 
     try {
-      if (email === 'miasaatrany@gmail.com') {
-        setError('Cet email est le compte administrateur principal. Veuillez vous connecter au lieu de vous inscrire.');
-        setLoading(false);
-        return;
-      }
       const res: any = await register({ email, password, displayName, role });
       if (res.pendingApproval) {
         setSuccess(res.message);
@@ -69,7 +64,7 @@ const Register: React.FC = () => {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
         <div className="max-w-md w-full bg-white rounded-3xl shadow-xl overflow-hidden border border-gray-100 p-10 text-center space-y-6">
-          <div className="w-20 h-20 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto shadow-lg shadow-emerald-600/10">
+          <div className="w-20 h-20 bg-brand-100 text-brand-600 rounded-full flex items-center justify-center mx-auto shadow-lg shadow-brand-600/10">
             <ShieldCheck size={40} />
           </div>
           <h2 className="text-2xl font-black text-slate-900">Inscription réussie !</h2>
@@ -94,7 +89,7 @@ const Register: React.FC = () => {
           <div className="bg-white w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 shadow-lg">
             <Package className="text-brand-600" size={32} />
           </div>
-          <h1 className="text-2xl font-bold text-white tracking-tight">Pharmacie Mampikony</h1>
+          <h1 className="text-2xl font-bold text-white tracking-tight">Tselatra</h1>
           <p className="text-brand-100 mt-1 font-medium">Créez votre compte professionnel</p>
         </div>
 
@@ -181,7 +176,7 @@ const Register: React.FC = () => {
                   required
                   value={displayName}
                   onChange={(e) => setDisplayName(e.target.value)}
-                  className="w-full pl-10 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all outline-none"
+                  className="w-full pl-10 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-brand-500 focus:border-transparent transition-all outline-none"
                   placeholder="Jean Dupont"
                 />
               </div>
@@ -196,7 +191,7 @@ const Register: React.FC = () => {
                   required
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="w-full pl-10 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all outline-none"
+                  className="w-full pl-10 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-brand-500 focus:border-transparent transition-all outline-none"
                   placeholder="votre@email.com"
                 />
               </div>
@@ -212,7 +207,7 @@ const Register: React.FC = () => {
                   minLength={6}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="w-full pl-10 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all outline-none"
+                  className="w-full pl-10 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-brand-500 focus:border-transparent transition-all outline-none"
                   placeholder="••••••••"
                 />
               </div>
@@ -220,35 +215,48 @@ const Register: React.FC = () => {
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">Rôle</label>
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-3 gap-2">
+                <button
+                  type="button"
+                  onClick={() => setRole('caissier')}
+                  className={cn(
+                    "flex flex-col items-center justify-center gap-1 py-3 px-2 rounded-xl border-2 transition-all",
+                    role === 'caissier'
+                      ? "border-brand-600 bg-brand-50 text-brand-700 font-bold"
+                      : "border-gray-100 bg-gray-50 text-gray-500"
+                  )}
+                >
+                  <ShoppingCart size={18} />
+                  <span className="text-[10px] uppercase tracking-tighter">Caissier</span>
+                </button>
                 <button
                   type="button"
                   onClick={() => setRole('agent')}
                   className={cn(
-                    "flex items-center justify-center gap-2 py-3 px-4 rounded-xl border-2 transition-all",
+                    "flex flex-col items-center justify-center gap-1 py-3 px-2 rounded-xl border-2 transition-all",
                     role === 'agent'
                       ? "border-brand-600 bg-brand-50 text-brand-700 font-bold"
                       : "border-gray-100 bg-gray-50 text-gray-500"
                   )}
                 >
                   <User size={18} />
-                  Agent
+                  <span className="text-[10px] uppercase tracking-tighter">Agent</span>
                 </button>
                 <button
                   type="button"
                   onClick={() => setRole('admin')}
                   className={cn(
-                    "flex items-center justify-center gap-2 py-3 px-4 rounded-xl border-2 transition-all",
+                    "flex flex-col items-center justify-center gap-1 py-3 px-2 rounded-xl border-2 transition-all",
                     role === 'admin'
                       ? "border-brand-600 bg-brand-50 text-brand-700 font-bold"
                       : "border-gray-100 bg-gray-50 text-gray-500"
                   )}
                 >
                   <ShieldCheck size={18} />
-                  Admin
+                  <span className="text-[10px] uppercase tracking-tighter">Admin</span>
                 </button>
               </div>
-              <p className="text-xs text-gray-400 mt-2 italic">* Le rôle Admin nécessite une validation pour certaines actions.</p>
+              <p className="text-[10px] text-gray-400 mt-2 italic">* Les rôles Admin et Agent nécessitent une validation.</p>
             </div>
 
             <button
@@ -310,7 +318,7 @@ const Register: React.FC = () => {
           <div className="mt-8 pt-6 border-t border-gray-100 text-center">
             <p className="text-gray-600 text-sm">
               Déjà un compte ?{' '}
-              <Link to="/login" className="text-green-600 hover:text-green-700 font-bold">
+              <Link to="/login" className="text-brand-600 hover:text-brand-700 font-bold">
                 Se connecter
               </Link>
             </p>
